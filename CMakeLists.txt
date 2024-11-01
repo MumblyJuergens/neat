@@ -7,6 +7,7 @@ project(neat
         LANGUAGES CXX)
 
 option(NEAT_BUILD_TESTS "Build tests for neat")
+option(NEAT_BUILD_SAMPLE "Build sample for neat")
 
 include(cmake/CPM.cmake)
 CPMAddPackage("gh:MumblyJuergens/mj#main")
@@ -20,6 +21,7 @@ set(neat_headers
 )
 
 add_library(neat ${neat_src} ${neat_headers})
+add_library(neat::neat ALIAS neat)
 target_compile_features(neat PUBLIC cxx_std_23)
 target_link_libraries(neat PUBLIC mj::mj)
 MJFullCompilerWarnings(neat)
@@ -27,4 +29,8 @@ MJLibrarySetup(neat INCLUDE_DIR "include" EXPORT_HEADER_PREFIX "neat/neat" HEADE
 
 if (${NEAT_BUILD_TESTS} OR PROJECT_IS_TOP_LEVEL)
     add_subdirectory("tests")
+endif()
+
+if (${NEAT_BUILD_SAMPLE} OR PROJECT_IS_TOP_LEVEL)
+    add_subdirectory("sample")
 endif()
