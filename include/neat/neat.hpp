@@ -1,1 +1,7 @@
-#include "neat/neat_export.h"
+#pragma once
+
+#include "neat/Population.hpp"
+
+namespace neat
+{
+} // End namesapce neat.
