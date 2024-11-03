@@ -84,6 +84,13 @@
         "xlocnum": "cpp",
         "xloctime": "cpp",
         "xmemory": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "bitset": "cpp",
+        "codecvt": "cpp",
+        "complex": "cpp",
+        "expected": "cpp",
+        "filesystem": "cpp",
+        "numbers": "cpp",
+        "source_location": "cpp"
     }
 }

@@ -1,4 +1,5 @@
 #include <array>
+#include <print>
 #include <neat/neat.hpp>
 #include <glube/glube.hpp>
 
@@ -9,6 +10,8 @@ void key_callback(glube::KeyEvent event)
         event.window->set_should_close(true);
     }
 }
+
+inline void clear_console() { std::print("\x1B[3J\x1B[H"); }
 
 int main()
 {
@@ -23,7 +26,7 @@ int main()
         neat::Neuron{neat::next_global_innovation_number(), neat::NeuronType::output},
     };
 
-    neat::Population population{inputs, outputs, 100, {}};
+    neat::Population population{inputs, outputs, 1000, neat::Config{.absolute_difference = false, .compatability_threshold = 1.0f}};
 
     // float result{};
     // auto fitnessFunction = [&result](std::span<float> output)
@@ -35,6 +38,9 @@ int main()
     {
 
         // population.resolve(fitnessFunction, {1.0f, 0.0f}, &result, 1.0f);
+
+        clear_console();
+        std::println("Species: {}", population.species_count());
 
         window.swap_buffers();
         window.poll_events();

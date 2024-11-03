@@ -6,7 +6,7 @@ namespace neat
     {
         const std::size_t m_in;
         const std::size_t m_out;
-        const float m_weight;
+        float m_weight;
         const bool m_enabled;
         const int m_innovation;
 
@@ -19,5 +19,7 @@ namespace neat
         [[nodiscard]] constexpr auto weight() const noexcept { return m_weight; }
         [[nodiscard]] constexpr auto enabled() const noexcept { return m_enabled; }
         [[nodiscard]] constexpr auto innovation() const noexcept { return m_innovation; }
+
+        constexpr void set_weight(const float value) noexcept { m_weight = value; }
     };
 } // End namespace neat.

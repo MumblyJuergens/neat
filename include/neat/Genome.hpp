@@ -34,6 +34,7 @@ namespace neat
             {
                 m_neurons.push_back(&output);
             }
+
             for (auto i = 0uz; i < inputs.size(); ++i)
             {
                 for (auto o = 0uz; o < outputs.size(); ++o)
@@ -41,6 +42,16 @@ namespace neat
                     m_synapses.emplace_back(inputs[i].number(), outputs[o].number(), Random::weight(), true, next_global_innovation_number());
                 }
             }
+        }
+
+        [[nodiscard]] constexpr Genome clone_randomise_weights() const noexcept
+        {
+            Genome genome = *this;
+            for (auto &synapse : genome.m_synapses)
+            {
+                synapse.set_weight(Random::weight());
+            }
+            return genome;
         }
 
         template <typename Self>
@@ -79,6 +90,8 @@ namespace neat
                     {
                         ++matching;
                         weightDifference += mj::difference(synapse[0]->weight(), synapse[1]->weight());
+                        ++synapse[0];
+                        ++synapse[1];
                     }
                     else if (innovation[0] < innovation[1])
                     {

@@ -6,6 +6,7 @@
 #include "neat/neat_export.h"
 #include "neat/Genome.hpp"
 #include "neat/Config.hpp"
+#include "neat/log.hpp"
 
 namespace neat
 {
@@ -19,7 +20,8 @@ namespace neat
         {
             for (auto &specie : m_species)
             {
-                if (genome.difference(specie.front(), cfg) < cfg.compatability_threshold)
+                const auto difference = genome.difference(specie.front(), cfg);
+                if (difference < cfg.compatability_threshold)
                 {
                     specie.emplace_back(std::move(genome));
                     return;
@@ -32,13 +34,18 @@ namespace neat
     public:
         using fitness_f = float(std::span<float> outputs);
 
-        [[nodiscard]] constexpr Population(std::span<Neuron> inputs, std::span<Neuron> outputs, const std::size_t populationSize, const Config &cfg) noexcept
+        [[nodiscard]] Population(std::span<Neuron> inputs, std::span<Neuron> outputs, const std::size_t populationSize, const Config &cfg) noexcept
             : cfg{cfg}
         {
-            for (auto i = 0uz; i < populationSize; ++i)
+            Genome genome{inputs, outputs};
+            add(genome);
+            for (auto i = 1uz; i < populationSize; ++i)
             {
-                add(Genome{inputs, outputs});
+                add(genome.clone_randomise_weights());
             }
         }
+
+        // Methods for giving information about progress.
+        [[nodiscard]] constexpr auto species_count() const noexcept { return m_species.size(); }
     };
 } // End namesapce neat.
