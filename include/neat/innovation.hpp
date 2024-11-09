@@ -1,13 +1,10 @@
 #pragma once
 
 #include <cstddef>
+#include "neat/neat_export.h"
 
 namespace neat
 {
-    using innovation_t = std::ptrdiff_t;
-    inline constexpr innovation_t next_global_innovation_number() noexcept
-    {
-        static innovation_t number{};
-        return number++;
-    }
+    using innovation_t = std::size_t;
+    NEAT_EXPORT innovation_t next_global_innovation_number() noexcept;
 } // End namespace neat.

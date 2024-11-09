@@ -1,7 +1,22 @@
+#include <print>
 #include <catch2/catch_test_macros.hpp>
-#include <neat/neat.hpp>
+#include <neat/Random.hpp>
 
-TEST_CASE("Placeholder test", "[deleteme]")
+TEST_CASE("Random skewed canonical suitable for index", "[random]")
 {
-    REQUIRE(1 == 1);
+    for (int i = 0; i < 1000; ++i)
+    {
+        const auto index = static_cast<std::size_t>((1.0f - neat::Random::canonical_skewed(6.0f)) * 4);
+        REQUIRE(index < 5);
+    }
+}
+
+TEST_CASE("Random range suitable for index", "[random]")
+{
+    std::size_t size{ 5 };
+    for (int i = 0; i < 1000; ++i)
+    {
+        const auto index = neat::Random::range(size - 1);
+        REQUIRE(index < 5);
+    }
 }

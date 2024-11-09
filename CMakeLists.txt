@@ -14,17 +14,22 @@ CPMAddPackage("gh:MumblyJuergens/mj#main")
 
 set(neat_src
     "src/neat.cpp"
+    "src/InnovationHistory.cpp"
 )
 
 set(neat_headers
     "include/neat/Config.hpp"
+    "include/neat/flag_types.hpp"
     "include/neat/Genome.hpp"
     "include/neat/innovation.hpp"
+    "include/neat/InnovationHistory.hpp"
     "include/neat/log.hpp"
     "include/neat/neat.hpp"
     "include/neat/Neuron.hpp"
     "include/neat/Population.hpp"
     "include/neat/Random.hpp"
+    "include/neat/Simulation.hpp"
+    "include/neat/Species.hpp"
     "include/neat/Synapse.hpp"
 )
 
