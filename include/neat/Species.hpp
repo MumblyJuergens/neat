@@ -76,7 +76,7 @@ namespace neat
 
         [[nodiscard]] const Genome *select_genome() const
         {
-            const auto index = static_cast<std::size_t>((1.0f - Random::canonical_skewed(4.0f)) * static_cast<float>(m_members.size() - 1u));
+            const auto index = static_cast<std::size_t>((Random::canonical_skewed_low(6.0f)) * static_cast<float>(m_members.size() - 1u));
             return m_members.at(index);
         }
 

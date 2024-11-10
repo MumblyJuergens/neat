@@ -13,8 +13,9 @@ include(cmake/CPM.cmake)
 CPMAddPackage("gh:MumblyJuergens/mj#main")
 
 set(neat_src
-    "src/neat.cpp"
+    "src/Genome.cpp"
     "src/InnovationHistory.cpp"
+    "src/neat.cpp"
 )
 
 set(neat_headers

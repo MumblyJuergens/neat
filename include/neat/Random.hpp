@@ -21,6 +21,8 @@ namespace neat
         [[nodiscard]] static float range(const float min, const float max) { return randf(engine, std::uniform_real_distribution<float>::param_type{ min, max }); }
         [[nodiscard]] static std::size_t range(const std::size_t max) { return randull(engine, std::uniform_int_distribution<std::size_t>::param_type{ 0ull, max }); }
         [[nodiscard]] static float gaussian() { return randgaussian(engine); }
-        [[nodiscard]] static float canonical_skewed(const float strength) { return 1.0f - std::powf(1.0f - canonical(), strength); }
+        [[nodiscard]] static float canonical_skewed_high(const float strength) { return 1.0f - std::powf(1.0f - canonical(), strength); }
+        [[nodiscard]] static float canonical_skewed_low(const float strength) { return 1.0f - std::powf(canonical(), strength); }
+
     };
 } // End namespace neat.

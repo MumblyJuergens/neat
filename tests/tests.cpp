@@ -6,7 +6,7 @@ TEST_CASE("Random skewed canonical suitable for index", "[random]")
 {
     for (int i = 0; i < 1000; ++i)
     {
-        const auto index = static_cast<std::size_t>((1.0f - neat::Random::canonical_skewed(6.0f)) * 4);
+        const auto index = static_cast<std::size_t>((neat::Random::canonical_skewed_low(6.0f)) * 4);
         REQUIRE(index < 5);
     }
 }

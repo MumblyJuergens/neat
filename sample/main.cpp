@@ -17,7 +17,7 @@ static inline void clear_console_properly() { std::print("\x1B[2J\x1B[H"); }
 struct Sim : public neat::Simulation
 {
     std::size_t i{};
-    bool m_is_perfect{};
+    // bool m_is_perfect{};
     struct Expected
     {
         float in0, in1, out;
@@ -29,31 +29,18 @@ struct Sim : public neat::Simulation
         {1.0f, 1.0f, 0.0f},
     };
 
-    void supply(std::span<float> inputs) override
+    void step(neat::SimulationInfo &info) override
     {
-        assert(inputs.size() == 3);
-        inputs[0] = 1.0f; // Bias.
-        inputs[1] = expecteds[i].in0;
-        inputs[2] = expecteds[i].in1;
-    }
+        info.assign_inputs(1.0f, expecteds[i].in0, expecteds[i].in1);
+        info.run();
+        info.fitness += (
+            (expecteds[i].out > 0.5f && info.outputs[0] > 0.5f)
+            || (expecteds[i].out < 0.5f && info.outputs[0] < 0.5f));
+        info.is_perfect = info.fitness > 3.5f;
 
-    [[nodiscard]] float receive(const std::span<float> outputs, const float fitness) override
-    {
-        assert(outputs.size() == 1);
-        const auto ret = fitness + (
-            (expecteds[i].out > 0.5f && outputs[0] > 0.5f)
-            || (expecteds[i].out < 0.5f && outputs[0] < 0.5f));// (1.0f - mj::difference(outputs[0], expecteds[i].out));
-        ++i;
-        m_is_perfect = ret > 3.5f;
-        return ret;
-    }
+        info.is_done = ++i == expecteds.size();
 
-    [[nodiscard]] bool is_done() const override
-    {
-        return i == expecteds.size();
     }
-
-    [[nodiscard]] virtual bool is_perfect() const override { return m_is_perfect; }
 };
 
 int main()
@@ -86,10 +73,10 @@ int main()
 
         if (population.generation_is_done())
         {
-            if (population.champ().simulation().is_perfect())
+            if (population.champ().fitness() > 3.5f)
             {
                 clear_console_properly();
-                std::println("Perfection!");
+                std::println("Perfection! Generation {}", population.generation());
                 std::println("{}", population.champ().chart());
                 break;
             }

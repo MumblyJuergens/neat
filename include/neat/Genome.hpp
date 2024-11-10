@@ -17,18 +17,21 @@
 #include "neat/innovation.hpp"
 #include "neat/Random.hpp"
 #include "neat/Config.hpp"
-#include "neat/Simulation.hpp"
 #include "neat/flag_types.hpp"
 #include "neat/InnovationHistory.hpp"
 
 namespace neat
 {
+    class Simulation;
+    class SimulationInfo;
+
     class [[nodiscard]] Genome final
     {
         std::vector<Synapse> m_synapses;
         std::vector<Neuron> m_neurons;
         float m_fitness{};
         std::shared_ptr<Simulation> m_simulation;
+        bool m_sim_is_done{};
         std::size_t m_layer_count{ 2 };
 
         [[nodiscard]] static float sigmoid(float x) noexcept
@@ -312,10 +315,11 @@ namespace neat
         template <typename Self>
         [[nodiscard]] constexpr auto &&neurons(this Self &&self) noexcept { return self.m_neurons; }
         [[nodiscard]] constexpr auto fitness() const noexcept { return m_fitness; }
-        [[nodiscard]] constexpr auto simulation_is_done() const noexcept { return m_simulation->is_done(); }
+        [[nodiscard]] constexpr auto simulation_is_done() const noexcept { return m_sim_is_done; }
         [[nodiscard]] constexpr auto &simulation() const noexcept { return *m_simulation; }
 
         // constexpr void set_fitness(const float value) noexcept { m_fitness = value; }
+        constexpr void set_simulation_is_done(const bool value) noexcept { m_sim_is_done = value; }
 
         [[nodiscard]] constexpr float difference(const std::vector<Synapse> &rep, const Config &cfg) const noexcept
         {
@@ -372,24 +376,27 @@ namespace neat
             return value;
         }
 
-        constexpr void step() noexcept
-        {
-            const auto inputCount = std::ranges::count_if(m_neurons, Neuron::is_input);
-            const auto outputCount = std::ranges::count_if(m_neurons, Neuron::is_output);
-            std::vector<float> values(static_cast<std::size_t>(inputCount + outputCount), 0.0f);
-            m_simulation->supply(std::span{ values.begin(), static_cast<std::size_t>(inputCount) });
+        // constexpr void step() noexcept
+        // {
+            // const auto inputCount = std::ranges::count_if(m_neurons, Neuron::is_input);
+            // const auto outputCount = std::ranges::count_if(m_neurons, Neuron::is_output);
+            // std::vector<float> values(static_cast<std::size_t>(inputCount + outputCount), 0.0f);
+            // m_simulation->supply(std::span{ values.begin(), static_cast<std::size_t>(inputCount) });
 
-            for (std::size_t i{}; i < static_cast<std::size_t>(inputCount); ++i)
-            {
-                m_neurons.at(i).set_value(values.at(i));
-            }
-            run_network();
-            for (auto i{ static_cast<std::size_t>(inputCount) }; i < static_cast<std::size_t>(inputCount + outputCount); ++i)
-            {
-                values.at(i) = m_neurons.at(i).value();
-            }
-            m_fitness = m_simulation->receive(std::span{ values.begin() + static_cast<std::ptrdiff_t>(inputCount), static_cast<std::size_t>(outputCount) }, m_fitness);
-        }
+            // for (std::size_t i{}; i < static_cast<std::size_t>(inputCount); ++i)
+            // {
+            //     m_neurons.at(i).set_value(values.at(i));
+            // }
+            // run_network();
+            // for (auto i{ static_cast<std::size_t>(inputCount) }; i < static_cast<std::size_t>(inputCount + outputCount); ++i)
+            // {
+            //     values.at(i) = m_neurons.at(i).value();
+            // }
+            // m_fitness = m_simulation->receive(std::span{ values.begin() + static_cast<std::ptrdiff_t>(inputCount), static_cast<std::size_t>(outputCount) }, m_fitness);
+        // }
+
+        NEAT_EXPORT void step();
+        NEAT_EXPORT void step(SimulationInfo &info);
 
         constexpr std::string chart() const noexcept
         {
@@ -404,6 +411,7 @@ namespace neat
         constexpr std::string code_cpp() const noexcept
         {
             // TODO: code_cpp...
+            return "";
         }
     };
 
