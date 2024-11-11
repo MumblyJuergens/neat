@@ -13,12 +13,12 @@ namespace neat
 
     class [[nodiscard]] Neuron final
     {
-        const innovation_t m_number;
-        const NeuronType m_type;
+        innovation_t m_number;
+        NeuronType m_type;
         float m_value{};
         std::size_t m_layer{};
 
-    public:
+        public:
         [[nodiscard]] constexpr Neuron(const innovation_t number, const NeuronType type) noexcept
             : m_number{ number }, m_type{ type }, m_layer{ type == NeuronType::input ? std::size_t{0} : std::size_t{1} }
         {
@@ -29,6 +29,7 @@ namespace neat
         [[nodiscard]] constexpr auto value() const noexcept { return m_value; }
         [[nodiscard]] constexpr auto layer() const noexcept { return m_layer; }
 
+        constexpr void set_number(const innovation_t value) noexcept { m_number = value; }
         constexpr void set_value(const float value) noexcept { m_value = value; }
         constexpr void set_layer(const std::size_t value) noexcept { m_layer = value; }
 

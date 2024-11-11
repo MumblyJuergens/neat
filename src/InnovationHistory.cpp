@@ -12,20 +12,19 @@ namespace neat
         return sg_global_innovation_number++;
     }
 
-    [[nodiscard]] innovation_t InnovationHistory::get_innovation_number(const Genome *genome, const innovation_t in, const innovation_t out) noexcept
+    [[nodiscard]] innovation_t InnovationHistory::get_innovation_number(const innovation_t in, const innovation_t out) noexcept
     {
-        for (const auto &entry : data)
+        const iipair p{ in, out };
+        if (data.contains(p))
         {
-            if (entry.innovations.size() != genome->synapses().size()) continue;
-            if (entry.in != in || entry.out != out) continue;
-            if (!std::ranges::is_permutation(entry.innovations, genome->synapses(), {}, {}, &Synapse::innovation)) continue;
-            return entry.innovation;
+            return data.at(p);
         }
-        const auto num = next_global_innovation_number();
-        std::vector<innovation_t> innovations(genome->synapses().size());
-        std::ranges::transform(genome->synapses(), innovations.begin(), std::identity{}, &Synapse::innovation);
-        data.emplace_back(std::move(innovations), in, out, num);
-        return num;
+        else
+        {
+            const auto num = next_global_innovation_number();
+            data.emplace(p, num);
+            return num;
+        }
     }
 
 } // End namespace neat;

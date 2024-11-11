@@ -32,6 +32,7 @@ namespace neat
         float m_fitness{};
         std::shared_ptr<Simulation> m_simulation;
         bool m_sim_is_done{};
+        bool m_sim_is_perfect{};
         std::size_t m_layer_count{ 2 };
 
         [[nodiscard]] static float sigmoid(float x) noexcept
@@ -128,7 +129,7 @@ namespace neat
             if (in == out) return;
             if (m_neurons.at(in).layer() >= m_neurons.at(out).layer()) return;
             if (std::ranges::any_of(m_synapses, [in, out](const Synapse &s) { return s.in() == in && s.out() == out; })) return;
-            const auto innovation = innovationHistory.get_innovation_number(this, in, out);
+            const auto innovation = innovationHistory.get_innovation_number(in, out);
             m_synapses.emplace_back(in, out, Random::weight(), innovation);
         }
 
@@ -155,6 +156,33 @@ namespace neat
             add_connection(conn.first, conn.second, innovationHistory);
         }
 
+        // constexpr void delete_connection() noexcept
+        // {
+        //     if (m_synapses.size() == 0) return;
+        //     const auto index = Random::range(m_synapses.size() - 1);
+        //     m_synapses.erase(std::next(m_synapses.begin(), static_cast<std::ptrdiff_t>(index)));
+        // }
+
+        // constexpr void delete_node() noexcept
+        // {
+        //     std::vector<std::vector<Neuron>::iterator> hiddens;
+        //     for (auto it = m_neurons.begin(); it != m_neurons.end(); ++it)
+        //     {
+        //         if (Neuron::is_hidden(*it))
+        //         {
+        //             hiddens.push_back(it);
+        //         }
+        //     }
+        //     if (hiddens.size() == 0) return;
+        //     const auto it = Random::item(hiddens);
+        //     std::erase_if(m_synapses, mj::magic_lambda(&Synapse::in, std::equal_to{}, it->number()));
+        //     std::erase_if(m_synapses, mj::magic_lambda(&Synapse::out, std::equal_to{}, it->number()));
+        //     for (auto &neuron : m_neurons | mj::filter(&Neuron::number, std::greater{}, it->number())) neuron.set_number(neuron.number() - 1);
+        //     for (auto &synapse : m_synapses | mj::filter(&Synapse::in, std::greater{}, it->number())) synapse.set_in(synapse.in() - 1);
+        //     for (auto &synapse : m_synapses | mj::filter(&Synapse::out, std::greater{}, it->number())) synapse.set_out(synapse.out() - 1);
+        //     m_neurons.erase(it);
+        // }
+
         constexpr void add_node(InnovationHistory &innovationHistory) noexcept
         {
             if (m_synapses.size() == 0)
@@ -174,8 +202,8 @@ namespace neat
             auto &neuron = m_neurons.emplace_back(newId, NeuronType::hidden);
             assert(oldIn < m_neurons.size());
             assert(oldOut < m_neurons.size());
-            const auto innovation0 = innovationHistory.get_innovation_number(this, oldIn, neuron.number());
-            const auto innovation1 = innovationHistory.get_innovation_number(this, neuron.number(), oldOut);
+            const auto innovation0 = innovationHistory.get_innovation_number(oldIn, neuron.number());
+            const auto innovation1 = innovationHistory.get_innovation_number(neuron.number(), oldOut);
             m_synapses.emplace_back(oldIn, neuron.number(), 1.0f, innovation0);
             m_synapses.emplace_back(neuron.number(), oldOut, oldWeight, innovation1);
 
@@ -248,7 +276,7 @@ namespace neat
                 return;
             }
 
-            // TODO: Remove nodes/conns.
+            // Thanks to https://github.com/CodeReclaimers/neat-python/blob/37bc8bb73fd6153a115001c2646f9f02bac3ad81/neat/genome.py#L264
             const float div = std::max(1.0f, cfg.mutate_new_node_rate + cfg.mutate_new_connection_rate);
             const float rand = Random::canonical();
 
@@ -256,33 +284,22 @@ namespace neat
             {
                 add_node(innovationHistory);
             }
+            // else if (rand < (cfg.mutate_new_node_rate + cfg.mutate_delete_node_rate) / div)
+            // {
+            //     delete_node();
+            // }
             else if (rand < (cfg.mutate_new_node_rate + cfg.mutate_new_connection_rate) / div)
             {
                 add_connection(innovationHistory);
             }
+            // else if (rand < (cfg.mutate_new_node_rate + cfg.mutate_delete_node_rate + cfg.mutate_new_connection_rate + cfg.mutate_delete_connection_rate) / div)
+            // {
+            //     delete_connection();
+            // }
 
             // TODO: Odds...
             std::ranges::for_each(m_synapses, [&cfg](Synapse &s) { s.mutate_weight(cfg); });
         }
-
-        // constexpr void run_neuron(Neuron &neuron, std::vector<int> &done)
-        // {
-        //     float value{};
-        //     for (auto &synapse : m_synapses)
-        //     {
-        //         if (synapse.enabled() && synapse.out() == neuron.number())
-        //         {
-        //             auto &in = m_neurons.at(synapse.in());
-        //             if (!done.at(synapse.in()))
-        //             {
-        //                 run_neuron(in, done);
-        //             }
-        //             value += in.value() * synapse.weight();
-        //         }
-        //     }
-        //     neuron.set_value(sigmoid(value));
-        //     done.at(neuron.number()) = true;
-        // }
 
         constexpr void run_network() noexcept
         {
@@ -298,16 +315,6 @@ namespace neat
                     neuron.set_value(sigmoid(value));
                 }
             }
-
-            // TODO: Feed-forward instead.
-            // std::vector<int> done(m_neurons.size(), false);
-            // for (auto &neuron : m_neurons)
-            // {
-            //     if (neuron.type() == NeuronType::output)
-            //     {
-            //         run_neuron(neuron, done);
-            //     }
-            // }
         }
 
         template <typename Self>
@@ -316,83 +323,110 @@ namespace neat
         [[nodiscard]] constexpr auto &&neurons(this Self &&self) noexcept { return self.m_neurons; }
         [[nodiscard]] constexpr auto fitness() const noexcept { return m_fitness; }
         [[nodiscard]] constexpr auto simulation_is_done() const noexcept { return m_sim_is_done; }
+        [[nodiscard]] constexpr auto simulation_is_perfect() const noexcept { return m_sim_is_perfect; }
         [[nodiscard]] constexpr auto &simulation() const noexcept { return *m_simulation; }
 
         // constexpr void set_fitness(const float value) noexcept { m_fitness = value; }
         constexpr void set_simulation_is_done(const bool value) noexcept { m_sim_is_done = value; }
 
-        [[nodiscard]] constexpr float difference(const std::vector<Synapse> &rep, const Config &cfg) const noexcept
+        // TODO: Move to mj.
+        struct [[nodiscard]] InsertCounter final
         {
-            const std::size_t maxGenomeCount = std::max(m_synapses.size(), rep.size());
-            std::array synapse{ m_synapses.cbegin(), rep.cbegin() };
-            std::array sentinal{ m_synapses.end(), rep.end() };
+            std::size_t count{};
+            using iterator_category = std::output_iterator_tag;
+            using value_type = void;
+            using difference_type = std::ptrdiff_t;
+            using pointer = void;
+            using reference = void;
+            using container_type = void;
+            constexpr InsertCounter &operator=(auto &&) noexcept { ++count; return *this; }
+            constexpr InsertCounter &operator*() noexcept { return *this; }
+            constexpr InsertCounter &operator++() noexcept { return *this; }
+            constexpr InsertCounter &operator++(int) noexcept { return *this; }
+        };
 
-            std::size_t disjoint{};
-            std::size_t excess{};
+        [[nodiscard]] constexpr float difference(const std::vector<Synapse> &representative, const Config &cfg) const noexcept
+        {
+            std::vector<Synapse> tSynapses, rSynapses;
+            std::ranges::copy_if(m_synapses, std::back_inserter(tSynapses), &Synapse::enabled);
+            std::ranges::copy_if(representative, std::back_inserter(rSynapses), &Synapse::enabled);
+            std::ranges::sort(tSynapses, {}, &Synapse::innovation);
+            std::ranges::sort(rSynapses, {}, &Synapse::innovation);
+
+            const auto divisor = static_cast<float>(std::max(std::size(tSynapses), std::size(rSynapses)));
+
+            InsertCounter disjointCounter;
+            std::ranges::set_difference(tSynapses, rSynapses, disjointCounter, {}, &Synapse::innovation, &Synapse::innovation);
+            const float disjoint = static_cast<float>(disjointCounter.count);
+
+            std::vector<Synapse> tMatching, rMatching;
+            std::ranges::set_intersection(tSynapses, rSynapses, std::back_inserter(tMatching), {}, &Synapse::innovation, &Synapse::innovation);
+            std::ranges::set_intersection(rSynapses, tSynapses, std::back_inserter(rMatching), {}, &Synapse::innovation, &Synapse::innovation);
+            assert(std::size(tMatching) == std::size(rMatching));
             float weightDifference{};
-            std::size_t matching{};
+            mj::loop(std::size(tMatching), [&](const std::size_t i) { weightDifference += mj::difference(tMatching[i].weight(), rMatching[i].weight()); });
+            const auto weightAverage = weightDifference / static_cast<float>(std::size(tMatching));
 
-            while (synapse[0] != sentinal[0] && synapse[1] != sentinal[1])
-            {
-                if (synapse[0] == sentinal[0])
-                {
-                    ++synapse[1];
-                    ++excess;
-                }
-                else if (synapse[1] == sentinal[1])
-                {
-                    ++synapse[0];
-                    ++excess;
-                }
-                else
-                {
-                    const std::array innovation{ synapse[0]->innovation(), synapse[1]->innovation() };
-                    if (innovation[0] == innovation[1])
-                    {
-                        ++matching;
-                        weightDifference += mj::difference(synapse[0]->weight(), synapse[1]->weight());
-                        ++synapse[0];
-                        ++synapse[1];
-                    }
-                    else if (innovation[0] < innovation[1])
-                    {
-                        ++synapse[0];
-                        ++disjoint;
-                    }
-                    else // if (innovation[1] < innovation[0])
-                    {
-                        ++synapse[1];
-                        ++disjoint;
-                    }
-                }
-            }
-
-            const float divisor = maxGenomeCount < 20 || cfg.absolute_difference ? 1.0f : static_cast<float>(maxGenomeCount);
-
-            const float value = (cfg.disjoint_coefficient * (static_cast<float>(disjoint) / divisor) +
-                cfg.excess_coefficient * (static_cast<float>(excess) / divisor) +
-                cfg.weight_difference_coefficent * (weightDifference / static_cast<float>(matching)));
-
-            return value;
+            return ((cfg.species_disjoint_coefficient * disjoint) / divisor) + weightAverage;
         }
 
-        // constexpr void step() noexcept
+        // [[nodiscard]] constexpr float difference_old(const std::vector<Synapse> &representative, const Config &cfg) const noexcept
         // {
-            // const auto inputCount = std::ranges::count_if(m_neurons, Neuron::is_input);
-            // const auto outputCount = std::ranges::count_if(m_neurons, Neuron::is_output);
-            // std::vector<float> values(static_cast<std::size_t>(inputCount + outputCount), 0.0f);
-            // m_simulation->supply(std::span{ values.begin(), static_cast<std::size_t>(inputCount) });
+        //     const auto meEnabled = std::ranges::count_if(m_synapses, &Synapse::enabled);
+        //     const auto representativeEnabled = std::ranges::count_if(representative, &Synapse::enabled);
+        //     const auto maxGenomeCount = std::max(meEnabled, representativeEnabled);
+        //     std::array synapse{ m_synapses.cbegin(), representative.cbegin() };
+        //     std::array sentinal{ m_synapses.end(), representative.end() };
 
-            // for (std::size_t i{}; i < static_cast<std::size_t>(inputCount); ++i)
-            // {
-            //     m_neurons.at(i).set_value(values.at(i));
-            // }
-            // run_network();
-            // for (auto i{ static_cast<std::size_t>(inputCount) }; i < static_cast<std::size_t>(inputCount + outputCount); ++i)
-            // {
-            //     values.at(i) = m_neurons.at(i).value();
-            // }
-            // m_fitness = m_simulation->receive(std::span{ values.begin() + static_cast<std::ptrdiff_t>(inputCount), static_cast<std::size_t>(outputCount) }, m_fitness);
+        //     std::size_t disjoint{};
+        //     std::size_t excess{};
+        //     float weightDifference{};
+        //     std::size_t matching{};
+
+        //     while (synapse[0] != sentinal[0] && synapse[1] != sentinal[1])
+        //     {
+        //         if (synapse[0] == sentinal[0])
+        //         {
+        //             if (!synapse[1]->enabled()) continue;
+        //             ++synapse[1];
+        //             ++excess;
+        //         }
+        //         else if (synapse[1] == sentinal[1])
+        //         {
+        //             if (!synapse[1]->enabled()) continue;
+        //             ++synapse[0];
+        //             ++excess;
+        //         }
+        //         else
+        //         {
+        //             const std::array innovation{ synapse[0]->innovation(), synapse[1]->innovation() };
+        //             if (innovation[0] == innovation[1])
+        //             {
+        //                 ++matching;
+        //                 weightDifference += mj::difference(synapse[0]->weight(), synapse[1]->weight());
+        //                 ++synapse[0];
+        //                 ++synapse[1];
+        //             }
+        //             else if (innovation[0] < innovation[1])
+        //             {
+        //                 ++synapse[0];
+        //                 ++disjoint;
+        //             }
+        //             else // if (innovation[1] < innovation[0])
+        //             {
+        //                 ++synapse[1];
+        //                 ++disjoint;
+        //             }
+        //         }
+        //     }
+
+        //     const float divisor = /*maxGenomeCount < 20 || cfg.species_absolute_difference ? 1.0f :*/ static_cast<float>(maxGenomeCount);
+
+        //     const float value = (cfg.species_disjoint_coefficient * (static_cast<float>(disjoint) / divisor) +
+        //         cfg.species_excess_coefficient * (static_cast<float>(excess) / divisor) +
+        //         cfg.species_weight_coefficent * (weightDifference / static_cast<float>(matching)));
+
+        //     return value;
         // }
 
         NEAT_EXPORT void step();
@@ -401,7 +435,7 @@ namespace neat
         constexpr std::string chart() const noexcept
         {
             std::ostringstream stream;
-            for (const auto &synapse : m_synapses | mj::filter(&Synapse::enabled, std::equal_to{}, true))
+            for (const auto &synapse : m_synapses | std::views::filter(&Synapse::enabled))
             {
                 std::println(stream, "{} -- {} --> {}", synapse.in(), synapse.weight(), synapse.out());
             }

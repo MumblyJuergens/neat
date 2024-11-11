@@ -16,30 +16,34 @@ static inline void clear_console_properly() { std::print("\x1B[2J\x1B[H"); }
 
 struct Sim : public neat::Simulation
 {
-    std::size_t i{};
-    // bool m_is_perfect{};
-    struct Expected
+    std::size_t step_count{};
+    static constexpr std::size_t max_steps = 100;
+
+    struct Entry
     {
-        float in0, in1, out;
+        float i0;
+        float i1;
+        float a;
     };
-    static inline std::array<Expected, 4> expecteds{
-        Expected{0.0f, 0.0f, 0.0f},
-        {0.0f, 1.0f, 1.0f},
-        {1.0f, 0.0f, 1.0f},
-        {1.0f, 1.0f, 0.0f},
+    static constexpr std::array<Entry, 4> data{
+        Entry{0, 0, 0},
+        {0, 1, 1},
+        {1, 0, 1},
+        {1, 1, 0},
     };
+
+
+    [[nodiscard]] static constexpr bool to_bool(const float f) noexcept { return f > 0.5f; }
 
     void step(neat::SimulationInfo &info) override
     {
-        info.assign_inputs(1.0f, expecteds[i].in0, expecteds[i].in1);
+        info.assign_inputs(1.0f, data[step_count].i0, data[step_count].i1);
+
         info.run();
-        info.fitness += (
-            (expecteds[i].out > 0.5f && info.outputs[0] > 0.5f)
-            || (expecteds[i].out < 0.5f && info.outputs[0] < 0.5f));
-        info.is_perfect = info.fitness > 3.5f;
 
-        info.is_done = ++i == expecteds.size();
-
+        info.fitness += to_bool(info.outputs[0]) == to_bool(data[step_count].a);
+        info.is_perfect = info.fitness > 3.9f;
+        info.is_done = ++step_count == std::size(data);
     }
 };
 
@@ -50,7 +54,7 @@ int main()
 
     auto simulationFactory = []() { return std::make_shared<Sim>(); };
 
-    neat::Population population{ 3, 1, 100, simulationFactory, neat::Config{.absolute_difference = false, .compatability_threshold = 1.0f, .fully_connect = true} };
+    neat::Population population{ 3, 1, 100, simulationFactory, neat::Config{.species_compatability_threshold = 5.0f, .fully_connect = true} };
     population.set_stats_string_handler([&population, sc{ 0ull }](const std::string stats) mutable
         {
             if (population.species_count() < sc)
@@ -73,7 +77,7 @@ int main()
 
         if (population.generation_is_done())
         {
-            if (population.champ().fitness() > 3.5f)
+            if (population.champ().simulation_is_perfect())
             {
                 clear_console_properly();
                 std::println("Perfection! Generation {}", population.generation());

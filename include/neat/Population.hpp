@@ -25,7 +25,7 @@ namespace neat
 
         population_t m_population;
         species_t m_species;
-        const Config cfg;
+        Config cfg;
         // float m_max_fitness{};
         bool m_generation_is_done{};
         std::function<std::shared_ptr<Simulation>()> m_simulation_factory;
@@ -50,7 +50,7 @@ namespace neat
             for (auto &specie : m_species)
             {
                 const auto difference = genome.difference(specie.representative(), cfg);
-                if (difference < cfg.compatability_threshold)
+                if (difference < cfg.species_compatability_threshold)
                 {
                     specie.add(&genome);
                     return;
@@ -63,7 +63,7 @@ namespace neat
         std::string latest_stats_output() const noexcept
         {
             std::ostringstream stream;
-            std::println(stream, "Statistics | Generation {:6} | Population {:6} | Max Fitness {:6}\n-----------------------------------------------------------------------------------\nSpecies | Members | Staleness | Age   | Avg Fitness | Max Fitness | CNodes | CConns", m_generation, m_population.size(), m_max_fitness);
+            std::println(stream, "Statistics | Generation {:6} | Population {:6} | Max Fitness {:6} | SCT: {:6}\n----------------------------------------------------------------------------------------\nSpecies | Members | Staleness | Age   | Avg Fitness | Max Fitness | CNodes | CConns", m_generation, m_population.size(), m_max_fitness, cfg.species_compatability_threshold);
             for (const auto &s : m_species) { std::println(stream, "{:7} | {:7} | {:9} | {:5} | {:11} | {:11} | {:6} | {:6}", s.id(), s.size(), s.staleness(), s.age(), s.average_fitness(), s.max_fitness(), s.champ()->neurons().size(), s.champ()->synapses().size()); }
             return stream.str();
         }
@@ -115,7 +115,7 @@ namespace neat
         [[nodiscard]] std::ptrdiff_t children_for_specie(const Species &specie, const float averagePopulationFitness) const noexcept
         {
             const auto numKids = static_cast<std::ptrdiff_t>(specie.average_fitness() / averagePopulationFitness * static_cast<float>(specie.size()));
-            return std::max(numKids, static_cast<std::ptrdiff_t>(cfg.minimum_species_size));
+            return std::max(numKids, static_cast<std::ptrdiff_t>(cfg.species_minimum_size));
         }
 
         constexpr void new_generation()
@@ -128,7 +128,7 @@ namespace neat
             std::ranges::sort(m_species, std::greater{}, &Species::average_fitness);
             const auto averagePopulationFitness = mj::sum(m_population, &Genome::fitness) / static_cast<float>(m_population_size);
             // Yeah I hate this too but...
-            m_species.erase(std::remove_if(std::next(m_species.begin()), m_species.end(), [this](const Species &s) { return s.staleness() > cfg.maximum_species_staleness; }), m_species.end());
+            m_species.erase(std::remove_if(std::next(m_species.begin()), m_species.end(), [this](const Species &s) { return s.staleness() > cfg.species_maximum_staleness; }), m_species.end());
             std::erase_if(m_species, mj::magic_lambda(&Species::size, std::equal_to{}, 0));
             std::ranges::for_each(m_species, &Species::set_representative);
 
@@ -151,6 +151,14 @@ namespace neat
                 children.push_back(m_species.front().generate_new(cfg, m_simulation_factory, innovationHistory));
             }
 
+            if (m_species.size() > cfg.species_count_target)
+            {
+                cfg.species_compatability_threshold += cfg.species_compatability_modifier;
+            }
+            else if (m_species.size() < cfg.species_count_target)
+            {
+                cfg.species_compatability_threshold -= cfg.species_compatability_modifier;
+            }
 
             m_population.swap(children);
             std::ranges::for_each(m_species, &Species::clear);

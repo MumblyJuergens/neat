@@ -30,6 +30,8 @@ namespace neat
         [[nodiscard]] constexpr auto enabled() const noexcept { return m_enabled; }
         [[nodiscard]] constexpr auto innovation() const noexcept { return m_innovation; }
 
+        constexpr void set_in(const innovation_t value) noexcept { m_in = value; }
+        constexpr void set_out(const innovation_t value) noexcept { m_out = value; }
         constexpr void set_weight(const float value) noexcept { m_weight = value; }
         constexpr void set_enabled(const bool value) noexcept { m_enabled = value; }
 
