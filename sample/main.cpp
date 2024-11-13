@@ -3,6 +3,8 @@
 #include <neat/neat.hpp>
 #include <glube/glube.hpp>
 
+using namespace neat::literals;
+
 static inline void key_callback(glube::KeyEvent event)
 {
     if (event.key == glube::Key::escape && event.action == glube::KeyAction::pressed)
@@ -17,13 +19,12 @@ static inline void clear_console_properly() { std::print("\x1B[2J\x1B[H"); }
 struct Sim : public neat::Simulation
 {
     std::size_t step_count{};
-    static constexpr std::size_t max_steps = 100;
 
     struct Entry
     {
-        float i0;
-        float i1;
-        float a;
+        neat::real_t i0;
+        neat::real_t i1;
+        neat::real_t a;
     };
     static constexpr std::array<Entry, 4> data{
         Entry{0, 0, 0},
@@ -33,16 +34,16 @@ struct Sim : public neat::Simulation
     };
 
 
-    [[nodiscard]] static constexpr bool to_bool(const float f) noexcept { return f > 0.5f; }
+    [[nodiscard]] static constexpr bool to_bool(const neat::real_t f) noexcept { return f > 0.5_r; }
 
     void step(neat::SimulationInfo &info) override
     {
-        info.assign_inputs(1.0f, data[step_count].i0, data[step_count].i1);
+        info.assign_inputs(1.0_r, data[step_count].i0, data[step_count].i1);
 
-        info.run();
+        info.run(std::tanhf);
 
         info.fitness += to_bool(info.outputs[0]) == to_bool(data[step_count].a);
-        info.is_perfect = info.fitness > 3.9f;
+        info.is_perfect = info.fitness > 3.5_r;
         info.is_done = ++step_count == std::size(data);
     }
 };
@@ -54,8 +55,13 @@ int main()
 
     auto simulationFactory = []() { return std::make_shared<Sim>(); };
 
-    neat::Population population{ 3, 1, 100, simulationFactory, neat::Config{.species_compatability_threshold = 5.0f, .fully_connect = true} };
-    population.set_stats_string_handler([&population, sc{ 0ull }](const std::string stats) mutable
+    neat::Config cfg{
+        .setup_inital_connection_rate = 0.0_r,
+        .species_compatability_threshold = 5.0_r,
+    };
+
+    neat::Population population{ simulationFactory, cfg };
+    population.set_stats_string_handler([&population, sc{ 0 }](const std::string stats) mutable
         {
             if (population.species_count() < sc)
             {
@@ -81,7 +87,7 @@ int main()
             {
                 clear_console_properly();
                 std::println("Perfection! Generation {}", population.generation());
-                std::println("{}", population.champ().chart());
+                std::println("{}", population.champ().brain().chart());
                 break;
             }
             population.new_generation();

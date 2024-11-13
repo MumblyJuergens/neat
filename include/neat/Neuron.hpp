@@ -1,6 +1,7 @@
 #pragma once
 
-#include "neat/innovation.hpp"
+#include <cstddef>
+#include "neat/types.hpp"
 
 namespace neat
 {
@@ -15,12 +16,12 @@ namespace neat
     {
         innovation_t m_number;
         NeuronType m_type;
-        float m_value{};
-        std::size_t m_layer{};
+        real_t m_value{};
+        int m_layer{};
 
         public:
         [[nodiscard]] constexpr Neuron(const innovation_t number, const NeuronType type) noexcept
-            : m_number{ number }, m_type{ type }, m_layer{ type == NeuronType::input ? std::size_t{0} : std::size_t{1} }
+            : m_number{ number }, m_type{ type }, m_layer{ type == NeuronType::input ? 0 : 1 }
         {
         }
 
@@ -31,7 +32,7 @@ namespace neat
 
         constexpr void set_number(const innovation_t value) noexcept { m_number = value; }
         constexpr void set_value(const float value) noexcept { m_value = value; }
-        constexpr void set_layer(const std::size_t value) noexcept { m_layer = value; }
+        constexpr void set_layer(const int value) noexcept { m_layer = value; }
 
         [[nodiscard]] static constexpr auto is_input(const Neuron &n) noexcept { return n.m_type == NeuronType::input; }
         [[nodiscard]] static constexpr auto is_output(const Neuron &n) noexcept { return n.m_type == NeuronType::output; }

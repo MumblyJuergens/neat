@@ -1,9 +1,10 @@
 #include "neat/Genome.hpp"
 #include "neat/Simulation.hpp"
+#include "neat/SimulationInfo.hpp"
 
 namespace neat
 {
-    NEAT_EXPORT void Genome::step()
+    void Genome::step()
     {
         SimulationInfo info{ *this, m_fitness };
         m_simulation->step(info);
@@ -12,20 +13,9 @@ namespace neat
         m_sim_is_perfect = info.is_perfect;
     }
 
-    NEAT_EXPORT void Genome::step(SimulationInfo &info)
+    void Genome::step(SimulationInfo &info, activator_f *activator)
     {
-        const auto inputCount = static_cast<std::size_t>(std::ranges::count_if(m_neurons, Neuron::is_input));
-        const auto outputCount = static_cast<std::size_t>(std::ranges::count_if(m_neurons, Neuron::is_output));
-        assert(info.inputs.size() == inputCount);
-        for (std::size_t i{}; i < inputCount; ++i)
-        {
-            m_neurons.at(i).set_value(info.inputs.at(i));
-        }
-        run_network();
-        info.outputs.resize(outputCount);
-        for (std::size_t i{}; i < outputCount; ++i)
-        {
-            info.outputs.at(i) = m_neurons.at(inputCount + i).value();
-        }
+        info.outputs = m_brain.run_network(info.inputs, activator);
     }
+
 } // End namespace neat.

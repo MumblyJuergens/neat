@@ -1,12 +1,10 @@
 #pragma once
 
 #include <unordered_map>
-#include "neat/innovation.hpp"
+#include "neat/types.hpp"
 
 namespace neat
 {
-
-    class Genome;
     using iipair = std::pair<innovation_t, innovation_t>;
 
     class [[nodiscard]] InnovationHistory final
@@ -14,7 +12,7 @@ namespace neat
         struct [[nodiscard]] iipair_hash final
         {
             using argument_type = iipair;
-            using result_type = std::size_t;
+            // using result_type = std::size_t;
 
             [[nodiscard]] static std::uint64_t mixup(std::uint64_t x) noexcept
             {
@@ -49,6 +47,8 @@ namespace neat
         };
 
         std::unordered_map<iipair, innovation_t, iipair_hash> data;
+
+        static innovation_t next_global_innovation_number() noexcept;
 
         public:
 
