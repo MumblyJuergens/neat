@@ -34,6 +34,9 @@ namespace neat
         int m_generation{};
         std::function<void(std::string)> m_stats_string_handler;
         InnovationHistory innovationHistory;
+        Brain m_champ;
+        int m_champ_id{};
+        bool m_finished{};
 
         public:
         // Methods for giving information about progress.
@@ -41,8 +44,10 @@ namespace neat
         [[nodiscard]] constexpr auto population_count() const noexcept { return mj::isize(m_population); }
         [[nodiscard]] constexpr auto max_fitness() const noexcept { return m_max_fitness; }
         [[nodiscard]] constexpr auto generation_is_done() const noexcept { return m_generation_is_done; }
-        [[nodiscard]] constexpr auto &champ() const noexcept { return m_population.at(0); }
+        [[nodiscard]] constexpr auto &champ() const noexcept { return m_champ; }
+        [[nodiscard]] constexpr auto champ_id() const noexcept { return m_champ_id; }
         [[nodiscard]] constexpr auto generation() const noexcept { return m_generation; }
+        [[nodiscard]] constexpr auto finished() const noexcept { return m_finished; }
 
         constexpr void set_stats_string_handler(std::function<void(std::string)> f) { m_stats_string_handler = f; }
         private:
@@ -86,8 +91,8 @@ namespace neat
             : cfg{ cfg }, m_simulation_factory{ simulationFactory }, m_population_size{ cfg.setup_population_size }
         {
             build_population(m_population, Init::yes);
+            m_champ.init(cfg, Init::yes);
         }
-
 
         constexpr void step() noexcept
         {
@@ -102,7 +107,16 @@ namespace neat
                     doneCount += genome.simulation_is_done() ? 1 : 0;
                 }
                 ++doneDone;
-                m_max_fitness = std::max(m_max_fitness, genome.fitness());
+                if (genome.fitness() > m_max_fitness)
+                {
+                    m_max_fitness = genome.fitness();
+                    m_champ = genome.brain();
+                    ++m_champ_id;
+                    if (genome.simulation_is_perfect())
+                    {
+                        m_finished = true;
+                    }
+                }
             }
             if (doneCount == doneDone)
             {

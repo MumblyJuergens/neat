@@ -72,6 +72,8 @@ namespace neat
 
         for (const auto &synapse : best.m_synapses)
         {
+            // TODO: Don't copy invalid (ie bad layer order) synapses.
+
             bool enabled = true;
 
             const auto matchingSynapse = std::ranges::find_if(worst.m_synapses, mj::magic_callable(&Synapse::innovation, std::equal_to{}, synapse.innovation()));
@@ -162,6 +164,7 @@ namespace neat
         if (std::ranges::any_of(m_synapses, [in, out](const Synapse &s) { return s.in() == in && s.out() == out; })) return;
         const auto innovation = s_innovation_history.get_innovation_number(in, out);
         m_synapses.emplace_back(in, out, Random::weight(), innovation);
+        // rebuild_layers();
     }
 
     void Brain::add_connection() noexcept
@@ -222,6 +225,27 @@ namespace neat
             adjustNeuron.set_layer(adjustNeuron.layer() + 1);
         }
         ++m_layer_count;
+        // rebuild_layers();
+
+    }
+
+    static void traceLongestPath(const Brain &brain, const Neuron &neuron, int &length)
+    {
+        for (const auto &synapse : brain.synapses() | mj::filter(&Synapse::out, std::equal_to{}, neuron.number()) | mj::filter(&Synapse::enabled, std::equal_to{}, true))
+        {
+            ++length;
+            traceLongestPath(brain, brain.neurons().at(mj::sz_t(synapse.in())), length);
+        }
+    }
+
+    void Brain::rebuild_layers() noexcept
+    {
+        for (auto &neuron : m_neurons)
+        {
+            int layer{};
+            traceLongestPath(*this, neuron, layer);
+            neuron.set_layer(layer);
+        }
     }
 
     // TODO: Recurrent connections.
@@ -259,7 +283,7 @@ namespace neat
         std::ostringstream stream;
         for (const auto &synapse : m_synapses | std::views::filter(&Synapse::enabled))
         {
-            std::println(stream, "{} -- {} --> {}", synapse.in(), synapse.weight(), synapse.out());
+            std::println(stream, "{}({}) -- {} --> {}({})", synapse.in(), m_neurons.at(mj::sz_t(synapse.in())).layer(), synapse.weight(), synapse.out(), m_neurons.at(mj::sz_t(synapse.out())).layer());
         }
         return stream.str();
     }

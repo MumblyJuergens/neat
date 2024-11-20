@@ -98,6 +98,6 @@
 			"numbers": "cpp",
 			"source_location": "cpp"
 		},
-		"editor.formatOnSave": true
+		"editor.formatOnSave": true,
 	}
 }

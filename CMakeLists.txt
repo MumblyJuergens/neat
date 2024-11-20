@@ -11,8 +11,10 @@ option(NEAT_BUILD_SAMPLE "Build sample for neat")
 
 include(cmake/CPM.cmake)
 CPMAddPackage("gh:MumblyJuergens/mj#main")
+CPMAddPackage("gh:MumblyJuergens/cppfront#main")
 
 add_subdirectory("neat")
+add_subdirectory("neatdraw")
 
 if (${NEAT_BUILD_TESTS} OR PROJECT_IS_TOP_LEVEL)
     add_subdirectory("tests")

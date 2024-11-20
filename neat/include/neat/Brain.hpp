@@ -21,9 +21,13 @@ namespace neat
 
         public:
 
-        [[nodiscard]] constexpr int synapse_count() const noexcept { return mj::isize(m_synapses); }
-        [[nodiscard]] constexpr int neuron_count() const noexcept { return mj::isize(m_neurons); }
-        [[nodiscard]] constexpr int layer_count() const noexcept { return m_layer_count; }
+        [[nodiscard]] constexpr auto synapse_count() const noexcept { return mj::isize(m_synapses); }
+        [[nodiscard]] constexpr auto neuron_count() const noexcept { return mj::isize(m_neurons); }
+        [[nodiscard]] constexpr auto layer_count() const noexcept { return m_layer_count; }
+
+        [[nodiscard]] constexpr const auto &synapses() const noexcept { return m_synapses; }
+        [[nodiscard]] constexpr const auto &neurons() const noexcept { return m_neurons; }
+
 
         [[nodiscard]] constexpr Brain() noexcept = default;
         [[nodiscard]] constexpr Brain(const Brain &) noexcept = default;
@@ -39,6 +43,7 @@ namespace neat
         void add_connection(const innovation_t in, const innovation_t out);
         void add_connection() noexcept;
         void add_node() noexcept;
+        void rebuild_layers() noexcept;
         [[nodiscard]] std::vector<real_t> run_network(const std::vector<real_t> &inputs, activator_f *activator) noexcept;
         std::string chart() const noexcept;
         std::string code_cpp() const noexcept;
