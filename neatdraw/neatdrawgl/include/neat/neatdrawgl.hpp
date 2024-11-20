@@ -39,7 +39,7 @@ namespace neat::draw::gl
             {
                 if (synapse.enabled())
                 {
-                    return glm::rgbColor(glm::vec3{ 100.0f, 90.0f, 100.0f / synapse.weight() });
+                    return glm::rgbColor(glm::vec3{ 100.0f, 90.0f, 100.0f / static_cast<float>(synapse.weight()) });
                 }
                 else
                 {

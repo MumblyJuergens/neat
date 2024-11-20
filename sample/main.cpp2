@@ -31,11 +31,13 @@ Sim : type =
     }
 
     data: std::array<Sim::Entry, 4> = (
-        :Sim::Entry = (0.0f, 0.0f, 0.0f),
-        :Sim::Entry = (0.0f, 1.0f, 1.0f),
-        :Sim::Entry = (1.0f, 0.0f, 1.0f),
-        :Sim::Entry = (1.0f, 1.0f, 0.0f),
+        :Sim::Entry = (0.0_r, 0.0_r, 0.0_r),
+        :Sim::Entry = (0.0_r, 1.0_r, 1.0_r),
+        :Sim::Entry = (1.0_r, 0.0_r, 1.0_r),
+        :Sim::Entry = (1.0_r, 1.0_r, 0.0_r),
     );
+
+    activator: (input: neat::real_t) = std::tanh(input);
 
     step: (override inout this, inout info: neat::SimulationInfo) =
     {
@@ -43,7 +45,7 @@ Sim : type =
 
         info.assign_inputs(1.0_r, data[step_count].i0, data[step_count].i1);
 
-        info.run(std::tanhf);
+        info.run(activator);
 
         info.fitness += to_bool(info.outputs[0]) == to_bool(data[step_count].a);
         info.is_perfect = info.fitness > 3.5_r;

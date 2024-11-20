@@ -1,3 +1,6 @@
+option(NEAT_DOUBLE_PRECISION "Use double instead of float" OFF)
+set_property(CACHE NEAT_REAL_TYPE PROPERTY STRINGS float double)
+
 set(neat_src
     "src/Brain.cpp"
     "src/Genome.cpp"
@@ -31,3 +34,6 @@ MJLibrarySetup(neat INCLUDE_DIR "include" EXPORT_HEADER_PREFIX "neat/neat" HEADE
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     MJSanitize(neat ON OFF ON OFF OFF)
 endif()
+
+configure_file("configure.hpp.in" "neat/configure.hpp")
+target_include_directories(neat PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")

@@ -5,9 +5,11 @@
 
 TEST_CASE("Random skewed canonical suitable for index", "[random]")
 {
+    using namespace neat::literals;
+
     for (int i = 0; i < 1000; ++i)
     {
-        const auto index = neat::Random::canonical_skewed_low(6.0f) * 4;
+        const auto index = neat::Random::canonical_skewed_low(6.0_r) * 4;
         REQUIRE(index < 5);
     }
 }
@@ -45,8 +47,10 @@ TEST_CASE("Sample xor solution test", "[xor]")
 
 TEST_CASE("rebuild brain layers", "[brain, layers]")
 {
+    using namespace neat::literals;
+
     neat::Brain brain;
-    brain.init({ .setup_input_nodes = 3, .setup_output_nodes = 1, .setup_connect_bias = false, .setup_inital_connection_rate = 0.0f }, neat::Init::yes);
+    brain.init({ .setup_input_nodes = 3, .setup_output_nodes = 1, .setup_connect_bias = false, .setup_inital_connection_rate = 0.0_r }, neat::Init::yes);
     brain.add_connection(0, 3); // Bias to output.
     brain.add_node(); // Uses only connection available.
 

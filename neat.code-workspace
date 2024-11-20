@@ -6,6 +6,7 @@
 	],
 	"settings": {
 		"files.associations": {
+			"*.cpp2": "cpp",
 			"vector": "cpp",
 			"array": "cpp",
 			"deque": "cpp",
@@ -96,7 +97,8 @@
 			"expected": "cpp",
 			"filesystem": "cpp",
 			"numbers": "cpp",
-			"source_location": "cpp"
+			"source_location": "cpp",
+			"stdfloat": "cpp"
 		},
 		"editor.formatOnSave": true,
 	}
