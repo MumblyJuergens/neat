@@ -1,5 +1,4 @@
 option(NEAT_DOUBLE_PRECISION "Use double instead of float" OFF)
-set_property(CACHE NEAT_REAL_TYPE PROPERTY STRINGS float double)
 
 set(neat_src
     "src/Brain.cpp"

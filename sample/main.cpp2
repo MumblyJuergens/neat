@@ -87,6 +87,7 @@ main: () =
         });
 
     champId: = -1;
+    deflashtoggle: = false;
 
     while !window.should_close()
     {
@@ -98,9 +99,13 @@ main: () =
 
         if population.generation_is_done()
         {
-            if (population.finished())
+            if population.finished()
             {
-                //clear_console_properly();
+                if !deflashtoggle
+                {
+                    deflashtoggle = true;
+                    clear_console_properly();
+                }
                 std::println("Perfection! Generation {}", population.generation());
                 std::println("{}", population.champ().chart());
             }

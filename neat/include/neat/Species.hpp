@@ -18,6 +18,7 @@ namespace neat
         int m_staleness{};
         int m_age{};
         real_t m_total_fitness{};
+        real_t m_total_adjusted_fitness{};
         real_t m_max_fitness{};
         real_t m_max_fitness_record{};
         int m_size{ 1 };
@@ -30,6 +31,7 @@ namespace neat
         [[nodiscard]] constexpr auto age() const noexcept { return m_age; }
         [[nodiscard]] constexpr auto total_fitness() const noexcept { return m_total_fitness; }
         [[nodiscard]] constexpr auto average_fitness() const noexcept { return m_total_fitness / static_cast<real_t>(m_size); }
+        [[nodiscard]] constexpr auto adjusted_fitness() const noexcept { return m_total_adjusted_fitness / static_cast<real_t>(m_size); }
         [[nodiscard]] constexpr auto max_fitness() const noexcept { return m_max_fitness; }
         [[nodiscard]] constexpr auto size() const noexcept { return m_size; }
 
@@ -40,6 +42,7 @@ namespace neat
         constexpr void increment_size() noexcept { ++m_size; }
         constexpr void test_max_fitness(const real_t value) noexcept { m_max_fitness = std::max(value, m_max_fitness); }
         constexpr void increase_total_fitness(const real_t value) noexcept { m_total_fitness += value; }
+        constexpr void increase_total_adjusted_fitness(const real_t value) noexcept { m_total_adjusted_fitness += value; }
 
 
         [[nodiscard]] constexpr Species(const Brain &representative) noexcept
@@ -51,6 +54,7 @@ namespace neat
         {
             m_size = 0;
             m_total_fitness = 0;
+            m_total_adjusted_fitness = 0;
         }
 
         constexpr void age_gracefully() noexcept

@@ -56,7 +56,7 @@ namespace neat
         {
             std::ostringstream stream;
             std::println(stream, "Statistics | Generation {:6} | Population {:6} | Max Fitness {:6} | SCT: {:6}\n----------------------------------------------------------------------------------------\nSpecies | Members | Staleness | Age   | Avg Fitness | Max Fitness | CNodes | CConns", m_generation, m_population.size(), m_max_fitness, cfg.species_compatability_threshold);
-            for (const auto &s : m_species) { std::println(stream, "{:7} | {:7} | {:9} | {:5} | {:11} | {:11} | {:6} | {:6}", s.id(), s.size(), s.staleness(), s.age(), s.average_fitness(), s.max_fitness(), s.representative().neuron_count(), s.representative().synapse_count()); }
+            for (const auto &s : m_species) { std::println(stream, "{:7} | {:7} | {:9} | {:5} | {:5.6} | {:11} | {:6} | {:6}", s.id(), s.size(), s.staleness(), s.age(), s.average_fitness(), s.max_fitness(), s.representative().neuron_count(), s.representative().synapse_count()); }
             return stream.str();
         }
 
@@ -164,10 +164,18 @@ namespace neat
                 specie.age_gracefully();
                 for (auto &genome : m_population | mj::filter(&Genome::species, std::equal_to{}, specie.id()))
                 {
-                    speciesAverageTotal += genome.fitness();
+                    if (cfg.crossover_use_adjusted_fitness)
+                    {
+                        const auto adjustedFitness = genome.fitness() / specie.size();
+                        speciesAverageTotal += adjustedFitness;
+                        specie.increase_total_adjusted_fitness(adjustedFitness);
+                    }
+                    else
+                    {
+                        speciesAverageTotal += genome.fitness();
+                    }
                     ++speciesPopulationCount;
                 }
-                //speciesAverageTotal += specie.average_fitness();
             }
             speciesAverageTotal /= static_cast<real_t>(speciesPopulationCount);
 
@@ -187,7 +195,8 @@ namespace neat
                     eliteCopied = 1;
                     children.emplace_back(m_simulation_factory()).brain() = std::ranges::find(m_population, specie.id(), &Genome::species)->brain();
                 }
-                const auto childCount = static_cast<int>((specie.average_fitness() / speciesAverageTotal) * static_cast<real_t>(specie.size())) - eliteCopied;
+                const real_t averageSpeciesFitness = cfg.crossover_use_adjusted_fitness ? specie.adjusted_fitness() : specie.average_fitness();
+                const auto childCount = static_cast<int>((averageSpeciesFitness / speciesAverageTotal) * static_cast<real_t>(specie.size())) - eliteCopied;
                 mj::loop(childCount, [&]() {
                     auto &parent0 = brain_roulette(specie);
                     auto &parent1 = brain_roulette(specie);

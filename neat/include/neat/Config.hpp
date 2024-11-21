@@ -26,6 +26,7 @@ namespace neat
 
         // Crossover.
         int crossover_elite_size = 5;
+        bool crossover_use_adjusted_fitness = true;
 
         // Mutation.
         real_t mutate_weight_rate = 0.8_r;
