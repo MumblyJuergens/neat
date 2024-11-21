@@ -1,3 +1,7 @@
+// xor.cpp2.
+//
+// Tests finding a network for solving xor, written in cpp2 for shits and giggles.
+
 /* lang:cpp */
 #include <neat/neat.hpp>
 #include <glube/glube.hpp>
@@ -6,24 +10,24 @@
 using namespace neat::literals;
 /* lang:end */
 
-key_callback: (copy event: glube::KeyEvent) = 
+key_callback: (copy event: glube::KeyEvent) =
 {
     if event.key == glube::Key::escape && event.action == glube::KeyAction::pressed
     {
-        event.window*.set_should_close(true);
+        event.window *.set_should_close(true);
     }
 }
 
 clear_console: () = std::print("\x1B[3J\x1B[H");
 clear_console_properly: () = std::print("\x1B[2J\x1B[H");
 
-Sim : type =
+Sim: type =
 {
     this: neat::Simulation = ();
-    
+
     step_count: std::size_t = 0;
 
-    Entry : @struct type =
+    Entry: @struct type =
     {
         i0: neat::real_t = ();
         i1: neat::real_t = ();
@@ -32,16 +36,16 @@ Sim : type =
 
     data: std::array<Sim::Entry, 4> = (
         :Sim::Entry = (0.0_r, 0.0_r, 0.0_r),
-        :Sim::Entry = (0.0_r, 1.0_r, 1.0_r),
-        :Sim::Entry = (1.0_r, 0.0_r, 1.0_r),
-        :Sim::Entry = (1.0_r, 1.0_r, 0.0_r),
+        : Sim::Entry = (0.0_r, 1.0_r, 1.0_r),
+        : Sim::Entry = (1.0_r, 0.0_r, 1.0_r),
+        : Sim::Entry = (1.0_r, 1.0_r, 0.0_r),
     );
 
     activator: (input: neat::real_t) = std::tanh(input);
 
-    step: (override inout this, inout info: neat::SimulationInfo) =
+    step: (override inout this, inout info : neat::SimulationInfo) =
     {
-        to_bool: == :(f: neat::real_t) = f > 0.5_r;
+        to_bool: == : (f : neat::real_t) = f > 0.5_r;
 
         info.assign_inputs(1.0_r, data[step_count].i0, data[step_count].i1);
 
@@ -57,24 +61,24 @@ Sim : type =
 main: () =
 {
     windowSize: const glm::ivec2 = (1280,720);
-    window: glube::Window = (windowSize.x, windowSize.y, "Neat Sample");
+    window: glube::Window = (windowSize.x, windowSize.y, "Neat XOR Sample");
     window.set_key_event_handler(key_callback);
 
     diagrammer: neat::draw::gl::Diagrammer = (windowSize, 0);
 
-    simulationFactory := :() = cpp2::shared.new<Sim>();
+    simulationFactory: = : () = cpp2::shared.new<Sim>();
 
     cfg: neat::Config = ();
     cfg.setup_inital_connection_rate = 0.0_r;
     cfg.species_compatability_threshold = 5.0_r;
 
     population: neat::Population = (simulationFactory, cfg);
-    speciesCount := 0;
+    speciesCount: = 0;
     population.set_stats_string_handler(:(stats: std::string) =
         {
-            pop := population&$;
-            sc := speciesCount&$;
-            if pop*.species_count() < sc*
+            pop: = population & $;
+            sc: = speciesCount & $;
+            if pop *.species_count() < sc *
             {
                 clear_console_properly();
             }
@@ -82,7 +86,7 @@ main: () =
             {
                 clear_console();
             }
-            sc* = pop*.species_count();
+            sc * = pop * .species_count();
             std::print("{}", stats);
         });
 

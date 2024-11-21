@@ -104,8 +104,8 @@ namespace neat
                 if (!genome.simulation_is_done())
                 {
                     genome.step();
-                    doneCount += genome.simulation_is_done() ? 1 : 0;
                 }
+                doneCount += genome.simulation_is_done() ? 1 : 0;
                 ++doneDone;
                 if (genome.fitness() > m_max_fitness)
                 {
@@ -166,7 +166,7 @@ namespace neat
                 {
                     if (cfg.crossover_use_adjusted_fitness)
                     {
-                        const auto adjustedFitness = genome.fitness() / specie.size();
+                        const auto adjustedFitness = genome.fitness() / static_cast<real_t>(specie.size());
                         speciesAverageTotal += adjustedFitness;
                         specie.increase_total_adjusted_fitness(adjustedFitness);
                     }
