@@ -1,5 +1,6 @@
 #pragma once
 
+#include <any>
 #include <memory>
 #include "neat/neat_export.h"
 #include "neat/types.hpp"
@@ -49,7 +50,7 @@ namespace neat
         constexpr void set_simulation_is_done(const bool value) noexcept { m_sim_is_done = value; }
         constexpr void set_species(const int value) noexcept { m_species = value; }
 
-        void step();
+        void step(std::any *const userData);
         void step(SimulationInfo &info, activator_f *activator);
 
     };

@@ -1,12 +1,13 @@
+
 #include "neat/Genome.hpp"
 #include "neat/Simulation.hpp"
 #include "neat/SimulationInfo.hpp"
 
 namespace neat
 {
-    void Genome::step()
+    void Genome::step(std::any *const userData)
     {
-        SimulationInfo info{ *this, m_fitness };
+        SimulationInfo info{ *this, m_fitness, userData };
         m_simulation->step(info);
         m_fitness = info.fitness;
         m_sim_is_done = info.is_done;

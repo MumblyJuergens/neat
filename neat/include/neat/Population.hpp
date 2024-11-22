@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <any>
 #include <functional>
 #include <memory>
 #include <numeric>
@@ -37,6 +38,7 @@ namespace neat
         Brain m_champ;
         int m_champ_id{};
         bool m_finished{};
+        std::any *const m_user_data;
 
         public:
         // Methods for giving information about progress.
@@ -48,6 +50,7 @@ namespace neat
         [[nodiscard]] constexpr auto champ_id() const noexcept { return m_champ_id; }
         [[nodiscard]] constexpr auto generation() const noexcept { return m_generation; }
         [[nodiscard]] constexpr auto finished() const noexcept { return m_finished; }
+        [[nodiscard]] constexpr auto user_data() const noexcept { return m_user_data; }
 
         constexpr void set_stats_string_handler(std::function<void(std::string)> f) { m_stats_string_handler = f; }
         private:
@@ -87,8 +90,8 @@ namespace neat
         }
 
         public:
-        [[nodiscard]] Population(std::function<std::shared_ptr<Simulation>()> simulationFactory, const Config &cfg) noexcept
-            : cfg{ cfg }, m_simulation_factory{ simulationFactory }, m_population_size{ cfg.setup_population_size }
+        [[nodiscard]] Population(std::function<std::shared_ptr<Simulation>()> simulationFactory, const Config &cfg = {}, std::any *const userData = nullptr) noexcept
+            : cfg{ cfg }, m_simulation_factory{ simulationFactory }, m_population_size{ cfg.setup_population_size }, m_user_data{ userData }
         {
             build_population(m_population, Init::yes);
             m_champ.init(cfg, Init::yes);
@@ -103,7 +106,7 @@ namespace neat
             {
                 if (!genome.simulation_is_done())
                 {
-                    genome.step();
+                    genome.step(m_user_data);
                 }
                 doneCount += genome.simulation_is_done() ? 1 : 0;
                 ++doneDone;
