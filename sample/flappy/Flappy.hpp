@@ -7,8 +7,11 @@
 #include <glube/glube.hpp>
 #include <mj/timer.hpp>
 #include <mj/console.hpp>
+#include <neat/neat.hpp>
+#include <neat/neatdrawgl.hpp>
 #include "Config.hpp"
 #include "Pipe.hpp"
+#include "Sim.hpp"
 
 namespace flappy
 {
@@ -17,24 +20,19 @@ namespace flappy
         glube::Window window{ Config::window_width, Config::window_height, "Flappy" };
         glube::Buffer pipes_vbo;
         glube::Buffer birds_vbo;
-        glube::Buffer pipes_mbo;
-        glube::AutoBuffer birds_mbo;
-        std::vector<glm::vec2> pipe_mbo_data;
-        std::vector<glm::vec2> birds_mbo_data;
+        glube::BuildingBuffer<glm::vec2> pipes_mbo;
+        glube::BuildingBuffer<glm::vec2> birds_mbo;
         glube::Attributes pipe_vao;
         glube::Attributes bird_vao;
         glube::Program program;
         mj::Timer<float> timer;
-        std::size_t bird_count{};
         std::array<Pipe, Pipe::count> pipes;
         std::optional<neat::Population> population;
         Bird playableBird{ .translation = {Bird::starting_x, Config::window_heightf / 2.0f} };
-        float playableBirdVertSpeed{};
-        std::any userData = UserData{ .pipes = &pipes, .birds_mbo_data = &birds_mbo_data, .delta = {} };
+        std::any userData = UserData{ .pipes = &pipes, .birds_mbo = &birds_mbo, .delta = {} };
         static constexpr int diagram_width = Config::window_width / 10;
         static constexpr int diagram_height = Config::window_height / 10;
         neat::draw::gl::Diagrammer diagrammer{ {diagram_width, diagram_height} };
-        int speciesCount{};
         int champId = -1;
         static inline bool upPressed{};
 
@@ -42,17 +40,9 @@ namespace flappy
 
         void rebuild_pipes_mbo()
         {
-            pipe_mbo_data.clear();
-            std::ranges::transform(pipes, std::back_inserter(pipe_mbo_data), &Pipe::translation);
-            pipes_mbo.overwrite(sizeof(glm::vec2) * pipe_mbo_data.size(), pipe_mbo_data.data());
+            std::ranges::transform(pipes, std::back_inserter(pipes_mbo), &Pipe::translation);
+            pipes_mbo.set_and_clear();
         };
-
-        void upload_bird_mbo()
-        {
-            bird_count = birds_mbo_data.size();
-            birds_mbo.set(sizeof(glm::vec2) * birds_mbo_data.size(), birds_mbo_data.data());
-            birds_mbo_data.clear();
-        }
 
         static void key_handler(glube::KeyEvent event)
         {
@@ -96,12 +86,13 @@ namespace flappy
             {
                 const auto pipeVertices = Pipe::vertices(Config::window_heightf);
                 pipes_vbo.init(sizeof(Vertex) * pipeVertices.size(), pipeVertices.data());
-                pipes_mbo.init(sizeof(glm::vec2) * Pipe::count);
-                rebuild_pipes_mbo();
 
                 const auto birdVertices = Bird::vertices();
                 birds_vbo.init(sizeof(Vertex) * birdVertices.size(), birdVertices.data());
             }
+
+            pipes_mbo.reserve(Pipe::count);
+            rebuild_pipes_mbo();
 
             glube::Shader vertShader{ glube::ShaderType::vertex,
             R"glsl(#version 460 core
@@ -130,26 +121,20 @@ namespace flappy
             const auto projection = glm::ortho(0.0f, Config::window_widthf, 0.0f, Config::window_heightf, -1.0f, 1.0f);
             program.set_uniform(nameof(projection), projection);
 
+            struct dummy { glm::vec2 translation; };
+
             pipe_vao.add(program, pipes_vbo, nameof(&Vertex::position), &Vertex::position);
             pipe_vao.add(program, pipes_vbo, nameof(&Vertex::color), &Vertex::color);
-            pipe_vao.add(program, pipes_mbo, nameof(&Pipe::translation), &Pipe::translation, glube::AttributeConfig{ .binding_index = 1, .divisor = 1, });
+            pipe_vao.add(program, pipes_mbo.buffer(), nameof(&dummy::translation), &dummy::translation, glube::AttributeConfig{ .binding_index = 1, .divisor = 1, });
 
             bird_vao.add(program, birds_vbo, nameof(&Vertex::position), &Vertex::position);
             bird_vao.add(program, birds_vbo, nameof(&Vertex::color), &Vertex::color);
-            bird_vao.add(program, birds_mbo.buffer(), nameof(&Bird::translation), &Bird::translation, glube::AttributeConfig{ .binding_index = 1, .divisor = 1, });
+            bird_vao.add(program, birds_mbo.buffer(), nameof(&dummy::translation), &dummy::translation, glube::AttributeConfig{ .binding_index = 1, .divisor = 1, });
 
             if (population)
             {
                 population->set_stats_string_handler([&](const std::string &stats) {
-                    if (population->species_count() < speciesCount)
-                    {
-                        mj::clear_console_properly();
-                    }
-                    else
-                    {
-                        mj::clear_console();
-                    }
-                    speciesCount = population->species_count();
+                    mj::clear_console_properly();
                     std::print("{}", stats);
                     });
             }
@@ -158,9 +143,10 @@ namespace flappy
 
         void reset()
         {
-            pipes[0].translation = { Config::window_widthf / Pipe::count, 0.0f };
-            pipes[1].translation = { Config::window_widthf / Pipe::count * 2.0f, -200.0f };
-            pipes[2].translation = { Config::window_widthf / Pipe::count * 3.0f, 200.0f };
+            for (std::size_t i{}; i < Pipe::count; ++i)
+            {
+                pipes[i].renew_at(Config::window_widthf / Pipe::count * static_cast<float>(i + 1));
+            }
         }
 
         void step()
@@ -173,7 +159,10 @@ namespace flappy
             {
                 auto &pipe = pipes[i];
                 pipe.translation.x -= Pipe::speed * timer.elapsed();
-                if (pipe.translation.x < -Pipe::width) pipe.translation.x = Config::window_widthf;
+                if (pipe.translation.x < -Pipe::width)
+                {
+                    pipe.renew_at(Config::window_widthf);
+                }
             }
             if (pipes[0].translation.x + Pipe::width < Bird::starting_x)
             {
@@ -187,25 +176,18 @@ namespace flappy
             }
             else
             {
-                if (upPressed)
-                {
-                    playableBirdVertSpeed = Bird::fly_speed;
-                }
-                playableBird.translation.y += playableBirdVertSpeed * timer.elapsed();
-                playableBirdVertSpeed -= Bird::gravity * timer.elapsed();
-
-                if (pipes[0].collide(playableBird, Config::window_heightf) || playableBird.translation.y < -Bird::radius || playableBird.translation.y > Config::window_heightf + Bird::radius)
+                if (game_logic(playableBird, upPressed, timer.elapsed(), pipes[0]))
                 {
                     reset();
-                    playableBird.translation = { Bird::starting_x, Config::window_heightf / 2.0f };
-                    playableBirdVertSpeed = 0.0f;
+                    playableBird.reset();
                 }
 
-                birds_mbo_data.push_back(playableBird.translation);
+                birds_mbo.push_back(playableBird.translation);
             }
 
             rebuild_pipes_mbo();
-            upload_bird_mbo();
+            birds_mbo.set_and_clear();
+
 
             program.activate();
 
@@ -213,7 +195,7 @@ namespace flappy
             glDrawArraysInstanced(GL_TRIANGLES, 0, Pipe::vertex_count, Pipe::count);
 
             bird_vao.activate();
-            glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, Bird::vertex_count, bird_count);
+            glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, Bird::vertex_count, birds_mbo.size_set());
 
             if (population)
             {

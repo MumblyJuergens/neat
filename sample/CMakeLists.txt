@@ -12,6 +12,7 @@ add_executable(neat_sample_flappy
 "flappy/Bird.hpp"
 "flappy/Config.hpp"
 "flappy/Flappy.hpp"
+"flappy/logic.hpp"
 "flappy/main.cpp"
 "flappy/Pipe.hpp"
 "flappy/Sim.hpp"

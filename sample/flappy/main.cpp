@@ -1,8 +1,3 @@
-#include <any>
-#include <neat/neat.hpp>
-#include <glube/glube.hpp>
-#include <neat/neatdrawgl.hpp>
-#include "Sim.hpp"
 #include "Flappy.hpp"
 
 int main()

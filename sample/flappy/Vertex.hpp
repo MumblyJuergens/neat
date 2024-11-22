@@ -3,8 +3,13 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-struct Vertex
+namespace flappy
 {
-    glm::vec2 position;
-    glm::vec3 color;
-};
+
+    struct Vertex
+    {
+        glm::vec2 position;
+        glm::vec3 color;
+    };
+
+} // End namespace flappy.

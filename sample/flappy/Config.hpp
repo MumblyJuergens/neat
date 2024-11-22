@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Pipe.hpp"
-
 namespace flappy
 {
 

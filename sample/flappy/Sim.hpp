@@ -1,17 +1,18 @@
 #pragma once
 
 #include <neat/SimulationInfo.hpp>
+#include <neat/Simulation.hpp>
 #include "Bird.hpp"
 #include "Pipe.hpp"
 #include "UserData.hpp"
 #include "Config.hpp"
+#include "logic.hpp"
 
 namespace flappy
 {
     struct Sim : public neat::Simulation
     {
         Bird bird{ .translation = {Bird::starting_x, Config::window_heightf / 2.0f} };
-        float vertSpeed = 0.0f;
 
         void step(neat::SimulationInfo &info) override
         {
@@ -24,14 +25,7 @@ namespace flappy
             info.run(std::tanh);
             const bool up = info.outputs[0] > 0.9f;
 
-            if (up)
-            {
-                vertSpeed = Bird::fly_speed;
-            }
-            bird.translation.y += vertSpeed * userData->delta;
-            vertSpeed -= Bird::gravity * userData->delta;
-
-            if (pipe0->collide(bird, Config::window_heightf) || bird.translation.y < -Bird::radius || bird.translation.y > Config::window_heightf + Bird::radius)
+            if (game_logic(bird, up, userData->delta, *pipe0))
             {
                 info.is_done = true;
             }
@@ -40,7 +34,7 @@ namespace flappy
                 info.fitness += 0.1f;
             }
 
-            userData->birds_mbo_data->push_back(bird.translation);
+            userData->birds_mbo->push_back(bird.translation);
 
         }
 
