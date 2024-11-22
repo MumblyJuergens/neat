@@ -60,11 +60,11 @@ Sim: type =
 
 main: () =
 {
-    windowSize: const glm::ivec2 = (1280,720);
+    windowSize: const glm::ivec2 = (800,600);
     window: glube::Window = (windowSize.x, windowSize.y, "Neat XOR Sample");
     window.set_key_event_handler(key_callback);
 
-    diagrammer: neat::draw::gl::Diagrammer = (windowSize, 0);
+    diagrammer: neat::draw::gl::Diagrammer = (windowSize);
 
     simulationFactory: = : () = cpp2::shared.new<Sim>();
 

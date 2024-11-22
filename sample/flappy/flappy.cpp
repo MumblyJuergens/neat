@@ -44,7 +44,7 @@ std::vector<Vertex> triangle_fan_circle(const float radius, const std::size_t si
 
 struct Bird
 {
-    static constexpr std::size_t vertex_count = 14;
+    static constexpr std::size_t vertex_count = 20;
     static constexpr float radius = 25.0f;
     [[nodiscard]] static constexpr std::vector<Vertex> vertices() noexcept
     {
@@ -225,7 +225,7 @@ struct Sim : public neat::Simulation
         }
         if (pipes[0].translation.x + Pipe::width < birdX)
         {
-            std::println("rotating...");
+            // std::println("rotating...");
             std::ranges::rotate(pipes, std::next(pipes.begin()));
         }
 
@@ -246,7 +246,8 @@ struct Sim : public neat::Simulation
     {
         const float input1 = window_heightf / pipes[0].top_distance(bird, window_heightf);
         const float input2 = window_heightf / pipes[0].bottom_distance(bird, window_heightf);
-        info.assign_inputs(1.0f, input1, input2);
+        const float input3 = window_heightf / bird.translation.y;
+        info.assign_inputs(1.0f, input1, input2, input3);
         info.run(std::tanh);
         const bool up = info.outputs[0] > 0.9f;
 
@@ -276,12 +277,14 @@ int main()
 {
     Sim::init();
 
-    neat::draw::gl::Diagrammer diagrammer{ {Sim::window_width, Sim::window_height}, 0 };
+    static constexpr int diagram_width = Sim::window_width / 10;
+    static constexpr int diagram_height = Sim::window_height / 10;
+    neat::draw::gl::Diagrammer diagrammer{ {diagram_width, diagram_height} };
 
     auto simulationFactory = []() { return std::make_shared<Sim>(); };
 
     neat::Config cfg{
-        .setup_input_nodes = 3,
+        .setup_input_nodes = 4,
         .setup_output_nodes = 1,
         .setup_inital_connection_rate = 0.0_r,
         .species_compatability_threshold = 5.0_r,
@@ -321,7 +324,9 @@ int main()
             diagrammer.build_diagram(population.champ());
         }
 
+        glViewport(0, 0, diagram_width, diagram_height);
         diagrammer.draw_diagram();
+        glViewport(0, 0, Sim::window_width, Sim::window_height);
 
         Sim::window.poll_events();
         Sim::window.swap_buffers();

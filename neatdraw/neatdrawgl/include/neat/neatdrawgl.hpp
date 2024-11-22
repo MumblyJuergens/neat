@@ -54,13 +54,12 @@ namespace neat::draw::gl
         std::size_t m_synapse_vertices{};
         glube::Attributes m_vao;
         glube::Program m_program;
-        glube::BitmapText m_text;
 
         glm::vec2 m_window_size{};
 
         public:
 
-        [[nodiscard]] Diagrammer(const glm::ivec2 windowSize, const int textureUnit)
+        [[nodiscard]] Diagrammer(const glm::ivec2 windowSize)
         {
             glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -89,22 +88,14 @@ namespace neat::draw::gl
             m_vao.add(m_program, m_vertex_buffer.buffer(), nameof(Vertex::position), &Vertex::position);
             m_vao.add(m_program, m_vertex_buffer.buffer(), nameof(Vertex::color), &Vertex::color);
 
-            if (!m_text.load_bbf("sample/Roboto.bff"))
-            {
-                throw std::runtime_error{ "Font file could not be loaded" };
-            }
-            m_text.set_color({ 0.0f, 1.0f, 0.0f });
-
-            configure(windowSize, textureUnit);
+            configure(windowSize);
         }
 
-        void configure(const glm::ivec2 windowSize, const int textureUnit)
+        void configure(const glm::ivec2 windowSize)
         {
             m_window_size = windowSize;
             const auto projection = glm::ortho(0.0f, m_window_size.x, 0.0f, m_window_size.y, -1.0f, 1.0f);
             m_program.set_uniform("projection", projection);
-            m_text.set_window_size(windowSize);
-            m_text.set_texture_unit(textureUnit);
         }
 
         void build_diagram(const Brain &brain)
