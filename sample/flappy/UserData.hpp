@@ -7,6 +7,7 @@
 
 struct UserData
 {
-    std::array<Pipe, Pipe::pipe_count> *const pipes;
+    std::array<Pipe, Pipe::count> *const pipes;
     std::vector<glm::vec2> *const birds_mbo_data;
+    float delta;
 };

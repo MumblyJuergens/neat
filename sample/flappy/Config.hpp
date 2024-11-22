@@ -11,8 +11,6 @@ namespace flappy
         static constexpr int window_height = 720;
         static constexpr float window_heightf = 720.0f;
         static constexpr float window_widthf = 1280.0f;
-        static constexpr float spacing = window_widthf / Pipe::count;
-
     };
 
 } // End namespace flappy.

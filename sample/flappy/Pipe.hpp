@@ -49,7 +49,7 @@ struct Pipe
         return glm::distance(bird.translation, translation + glm::vec2{ 0.0f, half });
     }
 
-    [[nodiscard]] constexpr bool collide(const Bird &bird, const float height)
+    [[nodiscard]] constexpr bool collide(const Bird &bird, const float height) const noexcept
     {
         const auto half = (height - gap) / 2.0f;
         return

@@ -11,7 +11,8 @@ endif()
 add_executable(neat_sample_flappy
 "flappy/Bird.hpp"
 "flappy/Config.hpp"
-"flappy/flappy.cpp"
+"flappy/Flappy.hpp"
+"flappy/main.cpp"
 "flappy/Pipe.hpp"
 "flappy/Sim.hpp"
 "flappy/UserData.hpp"
