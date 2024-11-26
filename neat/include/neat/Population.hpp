@@ -39,6 +39,7 @@ namespace neat
         int m_champ_id{};
         bool m_finished{};
         std::any *const m_user_data;
+        real_t m_generation_max_fitness{};
 
         public:
         // Methods for giving information about progress.
@@ -52,6 +53,10 @@ namespace neat
         [[nodiscard]] constexpr auto finished() const noexcept { return m_finished; }
         [[nodiscard]] constexpr auto user_data() const noexcept { return m_user_data; }
 
+        // Exposing inner magic to allow stats gathering.
+        [[nodiscard]] constexpr auto &genomes() const noexcept { return m_population; }
+        [[nodiscard]] constexpr auto &species() const noexcept { return m_species; }
+
         constexpr void set_stats_string_handler(std::function<void(std::string)> f) { m_stats_string_handler = f; }
         private:
 
@@ -59,7 +64,7 @@ namespace neat
         {
             std::ostringstream stream;
             std::println(stream, "Statistics | Generation {:6} | Population {:6} | Max Fitness {:6} | SCT: {:6}\n----------------------------------------------------------------------------------------\nSpecies | Members | Staleness | Age   | Avg Fitness | Max Fitness | CNodes | CConns", m_generation, m_population.size(), m_max_fitness, cfg.species_compatability_threshold);
-            for (const auto &s : m_species) { std::println(stream, "{:7} | {:7} | {:9} | {:5} | {:5.6} | {:11} | {:6} | {:6}", s.id(), s.size(), s.staleness(), s.age(), s.average_fitness(), s.max_fitness(), s.representative().neuron_count(), s.representative().synapse_count()); }
+            for (const auto &s : m_species) { std::println(stream, "{:7} | {:7} | {:9} | {:5} | {:11} | {:11} | {:6} | {:6}", s.id(), s.size(), s.staleness(), s.age(), s.average_fitness(), s.max_fitness(), s.representative().neuron_count(), s.representative().synapse_count()); }
             return stream.str();
         }
 
@@ -108,8 +113,18 @@ namespace neat
                 {
                     genome.step(m_user_data);
                 }
+                else
+                {
+                    genome.skip(m_user_data);
+                }
                 doneCount += genome.simulation_is_done() ? 1 : 0;
                 ++doneDone;
+                if (genome.fitness() > m_generation_max_fitness)
+                {
+                    m_generation_max_fitness = genome.fitness();
+                    genome.make_current_champ();
+                    m_stats_string_handler(std::format("Generation max: {}\r", m_generation_max_fitness));
+                }
                 if (genome.fitness() > m_max_fitness)
                 {
                     m_max_fitness = genome.fitness();
@@ -130,6 +145,7 @@ namespace neat
         constexpr void new_generation()
         {
             m_generation_is_done = false;
+            m_generation_max_fitness = {};
 
             // Speciate.
             // Crossover.

@@ -20,6 +20,9 @@ namespace neat
         bool m_sim_is_done{};
         bool m_sim_is_perfect{};
         int m_species{};
+        static inline int s_id{};
+        static inline int s_champ_id{};
+        int m_id{ ++s_id };
 
         [[nodiscard]] Genome(const Genome &other, std::shared_ptr<Simulation> freshSimulation) noexcept
             : m_brain{ other.m_brain },
@@ -45,13 +48,17 @@ namespace neat
         [[nodiscard]] constexpr auto simulation_is_perfect() const noexcept { return m_sim_is_perfect; }
         [[nodiscard]] constexpr auto &simulation() const noexcept { return *m_simulation; }
         [[nodiscard]] constexpr auto species() const noexcept { return m_species; }
+        [[nodiscard]] constexpr auto is_current_champ() const noexcept { return m_id == s_champ_id; }
 
         constexpr void set_adjusted_fitness(const real_t value) noexcept { m_adjusted_fitness = value; }
         constexpr void set_simulation_is_done(const bool value) noexcept { m_sim_is_done = value; }
         constexpr void set_species(const int value) noexcept { m_species = value; }
+        constexpr void make_current_champ() noexcept { s_champ_id = m_id; }
 
         void step(std::any *const userData);
         void step(SimulationInfo &info, activator_f *activator);
+        void skip(SimulationInfo &info);
+        void skip(std::any *const userData);
 
     };
 
