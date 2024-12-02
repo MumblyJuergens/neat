@@ -150,7 +150,8 @@ namespace snake
             std::ranges::for_each(tilesArray, &Tile::reset);
             for (std::size_t i{}; i < Config<std::size_t>::game_size; ++i)
             {
-                tiles[0, i].type = TileType::border;
+                auto ii = static_cast<std::ptrdiff_t>(i);
+                tiles[0, ii].type = TileType::border;
                 tiles[Config<int>::game_size - 1, i].type = TileType::border;
                 tiles[i, 0].type = TileType::border;
                 tiles[i, Config<int>::game_size - 1].type = TileType::border;
@@ -225,7 +226,7 @@ namespace snake
         }
 
         static constexpr neat::Config population_config{
-            .setup_input_nodes = 8 * 2 + 1,
+            .setup_input_nodes = 8 * 2 + 1 + 2,
             .setup_output_nodes = 3,
             .setup_inital_connection_rate = 0.0_r,
             // .species_disjoint_coefficient = 1.3_r,
@@ -248,6 +249,8 @@ namespace snake
                 info.inputs.push_back(result.type);
                 info.inputs.push_back(result.distance);
             }
+            info.inputs.push_back(static_cast<float>(snake_facing) / 8.0f);
+            info.inputs.push_back(static_cast<float>(snake_length));
 
             // info.run([](neat::real_t x) { return 1.0_r / (1.0_r + std::exp(-x)); });
             info.run(std::tanh);
@@ -276,7 +279,7 @@ namespace snake
             bool hasEnergy = energy > 0.0_r;
             if (!hasEnergy) ++stats_energy_zero;
 
-            if (hasEnergy > 0.0_r && step(userData->energy_max))
+            if (hasEnergy && step(userData->energy_max))
             {
 
                 for (int y{}; y != tiles.extent(0); ++y)
@@ -377,11 +380,11 @@ int main()
         if (event.key == glube::Key::tab && event.action == glube::KeyAction::pressed) skipgen = true;
         if (event.key == glube::Key::keypad_add && event.action == glube::KeyAction::pressed)
         {
-            std::println("Energy Max: {}", std::any_cast<UserData>(&userData)->energy_max *= 10);
+            std::println("Energy Max: {}", std::any_cast<UserData>(&userData)->energy_max += 1000);
         }
         if (event.key == glube::Key::keypad_subtract && event.action == glube::KeyAction::pressed)
         {
-            std::println("Energy Max: {}", std::any_cast<UserData>(&userData)->energy_max /= 10);
+            std::println("Energy Max: {}", std::any_cast<UserData>(&userData)->energy_max -= 1000);
         }
         });
 
@@ -429,12 +432,12 @@ int main()
         program.set_uniform("pointsize", 1.0f);
         game_vao.activate();
         game_vbo.set_and_clear();
-        glDrawArrays(GL_POINTS, 0, game_vbo.size_set());
+        glDrawArrays(GL_POINTS, 0, game_vbo.isize_set());
 
         program.set_uniform("pointsize", Config<float>::window_champ_pixel_size);
         champ_vao.activate();
         champ_vbo.set_and_clear();
-        glDrawArrays(GL_POINTS, 0, champ_vbo.size_set());
+        glDrawArrays(GL_POINTS, 0, champ_vbo.isize_set());
 
         if (population.champ_id() != champId)
         {
@@ -470,7 +473,7 @@ int main()
 
         window.swap_buffers();
         window.poll_events();
-        if (population.generation() == 100) window.set_should_close(true);
+        // if (population.generation() == 100) window.set_should_close(true);
     }
 
 }

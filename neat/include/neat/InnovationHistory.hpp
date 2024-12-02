@@ -25,7 +25,7 @@ namespace neat
                 return x;
             }
 
-            [[nodiscard]] static constexpr std::uint32_t mixup(std::uint32_t x) noexcept
+            [[nodiscard]] static std::uint32_t mixup(std::uint32_t x) noexcept
             {
                 static constexpr std::uint32_t m1 = 0x21f0aaad;
                 static constexpr std::uint32_t m2 = 0x735a2d97;
@@ -37,7 +37,7 @@ namespace neat
                 return x;
             }
 
-            [[nodiscard]] constexpr std::size_t operator()(const iipair &v) const noexcept
+            [[nodiscard]] std::size_t operator()(const iipair &v) const noexcept
             {
                 std::size_t seed = 0;
                 seed = mixup(seed + 0x9e3779b9 + static_cast<std::size_t>(v.first));

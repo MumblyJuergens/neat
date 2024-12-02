@@ -32,6 +32,7 @@ namespace neat::draw::gl
                 case NeuronType::input: return { 1, 0, 0 };
                 case NeuronType::output: return { 0, 1, 0 };
                 case NeuronType::hidden: return { 0, 0, 1 };
+                default: return { 0.73f, 0.07f, 0.99f }; // Purple.
                 }
             }
 
@@ -50,8 +51,8 @@ namespace neat::draw::gl
         };
 
         glube::AutoBuffer m_vertex_buffer;
-        std::size_t m_neuron_vertices{};
-        std::size_t m_synapse_vertices{};
+        int m_neuron_vertices{};
+        int m_synapse_vertices{};
         glube::Attributes m_vao;
         glube::Program m_program;
 
@@ -162,8 +163,8 @@ namespace neat::draw::gl
 
             m_vertex_buffer.set(vertices.size() * sizeof(Vertex), vertices.data());
 
-            m_neuron_vertices = neuronVertices.size();
-            m_synapse_vertices = synapseVertices.size();
+            m_neuron_vertices = mj::isize(neuronVertices);
+            m_synapse_vertices = mj::isize(synapseVertices);
         }
 
         void draw_diagram()

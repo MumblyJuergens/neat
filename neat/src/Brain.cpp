@@ -152,7 +152,7 @@ namespace neat
             {
                 inFront += neuronsInLayers.at(mj::sz_t(j));
             }
-            maxConnections += neuronsInLayers.at(mj::sz_t(i)) * inFront;
+            maxConnections += gsl::narrow<int>(neuronsInLayers.at(mj::sz_t(i)) * inFront);
         }
         return maxConnections == mj::isize(m_synapses);
     }

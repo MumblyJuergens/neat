@@ -37,8 +37,8 @@ namespace neat
 
         constexpr Genome(const Genome &) = delete;
         constexpr Genome &operator=(const Genome &) = delete;
-        constexpr Genome(Genome &&other) noexcept = default;
-        constexpr Genome &operator=(Genome &&other) noexcept = default;
+        Genome(Genome &&other) noexcept = default;
+        Genome &operator=(Genome &&other) noexcept = default;
 
         template <typename Self>
         [[nodiscard]] constexpr auto &&brain(this Self &&self) noexcept { return self.m_brain; }
@@ -46,9 +46,9 @@ namespace neat
         [[nodiscard]] constexpr auto adjusted_fitness() const noexcept { return m_adjusted_fitness; }
         [[nodiscard]] constexpr auto simulation_is_done() const noexcept { return m_sim_is_done; }
         [[nodiscard]] constexpr auto simulation_is_perfect() const noexcept { return m_sim_is_perfect; }
-        [[nodiscard]] constexpr auto &simulation() const noexcept { return *m_simulation; }
+        [[nodiscard]] auto &simulation() const noexcept { return *m_simulation; }
         [[nodiscard]] constexpr auto species() const noexcept { return m_species; }
-        [[nodiscard]] constexpr auto is_current_champ() const noexcept { return m_id == s_champ_id; }
+        [[nodiscard]] auto is_current_champ() const noexcept { return m_id == s_champ_id; }
 
         constexpr void set_adjusted_fitness(const real_t value) noexcept { m_adjusted_fitness = value; }
         constexpr void set_simulation_is_done(const bool value) noexcept { m_sim_is_done = value; }

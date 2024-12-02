@@ -42,13 +42,13 @@ namespace flappy
 
         glm::vec2 translation{};
 
-        [[nodiscard]] constexpr float bottom_distance(const Bird &bird, const float height) const noexcept
+        [[nodiscard]] float bottom_distance(const Bird &bird, const float height) const noexcept
         {
             const auto half = (height - gap) / 2.0f;
             return glm::distance(bird.translation, translation + glm::vec2{ 0.0f, half + gap });
         }
 
-        [[nodiscard]] constexpr float top_distance(const Bird &bird, const float height) const noexcept
+        [[nodiscard]] float top_distance(const Bird &bird, const float height) const noexcept
         {
             const auto half = (height - gap) / 2.0f;
             return glm::distance(bird.translation, translation + glm::vec2{ 0.0f, half });

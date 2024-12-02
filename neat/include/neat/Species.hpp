@@ -45,7 +45,7 @@ namespace neat
         constexpr void increase_total_adjusted_fitness(const real_t value) noexcept { m_total_adjusted_fitness += value; }
 
 
-        [[nodiscard]] constexpr Species(const Brain &representative) noexcept
+        [[nodiscard]] Species(const Brain &representative) noexcept
             : m_representative{ representative }
         {
         }

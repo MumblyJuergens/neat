@@ -57,7 +57,7 @@ namespace neat
         [[nodiscard]] constexpr auto &genomes() const noexcept { return m_population; }
         [[nodiscard]] constexpr auto &species() const noexcept { return m_species; }
 
-        constexpr void set_stats_string_handler(std::function<void(std::string)> f) { m_stats_string_handler = f; }
+        void set_stats_string_handler(std::function<void(std::string)> f) { m_stats_string_handler = f; }
         private:
 
         std::string latest_stats_output() const noexcept
@@ -142,7 +142,7 @@ namespace neat
             }
         }
 
-        constexpr void new_generation()
+        void new_generation()
         {
             m_generation_is_done = false;
             m_generation_max_fitness = {};

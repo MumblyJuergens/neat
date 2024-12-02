@@ -252,7 +252,7 @@ namespace flappy
             glDrawArraysInstanced(GL_TRIANGLES, 0, Pipe::vertex_count, Pipe::count);
 
             bird_vao.activate();
-            glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, Bird::vertex_count, birds_mbo.size_set());
+            glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, Bird::vertex_count, gsl::narrow<GLsizei>(birds_mbo.size_set()));
 
             handler->post_step(*this);
 
