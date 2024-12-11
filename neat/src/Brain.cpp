@@ -162,7 +162,7 @@ namespace neat
         if (in == out) return;
         if (m_neurons.at(mj::sz_t(in)).layer() >= m_neurons.at(mj::sz_t(out)).layer()) return;
         if (std::ranges::any_of(m_synapses, [in, out](const Synapse &s) { return s.in() == in && s.out() == out; })) return;
-        const auto innovation = s_innovation_history.get_innovation_number(in, out);
+        const auto innovation = InnovationHistory::get_innovation_number(in, out);
         m_synapses.emplace_back(in, out, Random::weight(), innovation);
         // rebuild_layers();
     }
@@ -210,8 +210,8 @@ namespace neat
         auto &neuron = m_neurons.emplace_back(newId, NeuronType::hidden);
         assert(oldIn < mj::isize(m_neurons));
         assert(oldOut < mj::isize(m_neurons));
-        const auto innovation0 = s_innovation_history.get_innovation_number(oldIn, neuron.number());
-        const auto innovation1 = s_innovation_history.get_innovation_number(neuron.number(), oldOut);
+        const auto innovation0 = InnovationHistory::get_innovation_number(oldIn, neuron.number());
+        const auto innovation1 = InnovationHistory::get_innovation_number(neuron.number(), oldOut);
         m_synapses.emplace_back(oldIn, neuron.number(), 1.0_r, innovation0);
         m_synapses.emplace_back(neuron.number(), oldOut, oldWeight, innovation1);
 

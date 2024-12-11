@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cereal/types/utility.hpp>
+#include <cereal/types/unordered_map.hpp>
 #include <unordered_map>
 #include "neat/types.hpp"
 
@@ -46,13 +48,20 @@ namespace neat
             }
         };
 
-        std::unordered_map<iipair, innovation_t, iipair_hash> data;
+        static std::unordered_map<iipair, innovation_t, iipair_hash> data;
+        static innovation_t s_global_innovation_number;
 
         static innovation_t next_global_innovation_number() noexcept;
 
         public:
 
-        [[nodiscard]] innovation_t get_innovation_number(const innovation_t in, const innovation_t out) noexcept;
+        [[nodiscard]] static innovation_t get_innovation_number(const innovation_t in, const innovation_t out) noexcept;
+
+        template<typename Archive>
+        static void serialize_static(Archive &ar)
+        {
+            ar(data, s_global_innovation_number);
+        }
     };
 
 } // End namespace neat.

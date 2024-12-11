@@ -1,7 +1,6 @@
 #pragma once
 
 #include <span>
-#include "neat/Genome.hpp"
 
 namespace neat
 {
@@ -20,5 +19,6 @@ namespace neat
         virtual void init([[maybe_unused]] SimulationInfo &info) {}
         virtual void step(SimulationInfo &info) = 0;
         virtual void skip([[maybe_unused]] SimulationInfo &info) {}
+
     };
 } // End namespace neat.

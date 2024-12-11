@@ -50,6 +50,21 @@ namespace neat
         {
         }
 
+        /// @brief Don't use. Serialization use only. Please don't make species without a representative.
+        Species() = default;
+
+        template<typename Archive>
+        void serialize(Archive &ar)
+        {
+            ar(m_id, m_representative, m_staleness, m_age, m_total_fitness, m_total_adjusted_fitness, m_max_fitness, m_max_fitness_record, m_size);
+        }
+
+        template<typename Archive>
+        static void serialize_static(Archive &ar)
+        {
+            ar(s_id);
+        }
+
         constexpr void new_generation() noexcept
         {
             m_size = 0;

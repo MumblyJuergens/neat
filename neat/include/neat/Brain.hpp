@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <mj/size.hpp>
+#include <cereal/types/vector.hpp>
 #include "neat/neat_export.h"
 #include "neat/types.hpp"
 #include "neat/Config.hpp"
@@ -17,7 +18,6 @@ namespace neat
         std::vector<Synapse> m_synapses;
         std::vector<Neuron> m_neurons;
         int m_layer_count{ 2 };
-        static InnovationHistory s_innovation_history;
 
         public:
 
@@ -28,6 +28,11 @@ namespace neat
         [[nodiscard]] constexpr const auto &synapses() const noexcept { return m_synapses; }
         [[nodiscard]] constexpr const auto &neurons() const noexcept { return m_neurons; }
 
+        template<typename Archive>
+        void serialize(Archive &ar)
+        {
+            ar(m_synapses, m_neurons, m_layer_count);
+        }
 
         [[nodiscard]] constexpr Brain() noexcept = default;
         [[nodiscard]] constexpr Brain(const Brain &) noexcept = default;

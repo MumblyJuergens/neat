@@ -40,20 +40,23 @@ namespace flappy
             virtual void post_step(Flappy &) {};
         };
 
+        struct SimFactory : public neat::SimulationFactory
+        {
+            std::shared_ptr<neat::Simulation> create_simulation() override { return std::make_shared<Sim>(); }
+        };
+
         // Simulating...
         struct SimHandler : public GameHandler
         {
             std::optional<neat::Population> population;
-            std::any userData;
+            UserData userData;
             static constexpr int diagram_width = Config::window_width / 10;
             static constexpr int diagram_height = Config::window_height / 10;
             neat::draw::gl::Diagrammer diagrammer{ {diagram_width, diagram_height} };
             int champId = -1;
 
-            static auto simulationFactory() { return std::make_shared<Sim>(); }
-
             SimHandler(Flappy &floppy)
-                :userData{ UserData{.pipes = &floppy.pipes, .birds_mbo = &floppy.birds_mbo, .delta = {} } }
+                :userData{ &floppy.pipes, &floppy.birds_mbo }
             {
                 using namespace neat::literals;
                 neat::Config cfg{
@@ -62,7 +65,7 @@ namespace flappy
                     .setup_inital_connection_rate = 0.0_r,
                     .species_compatability_threshold = 5.0_r,
                 };
-                population.emplace(simulationFactory, cfg, &userData);
+                population.emplace(std::make_unique<SimFactory>(), cfg, &userData);
 
                 population->set_stats_string_handler([&](const std::string &stats) {
                     mj::clear_console_properly();
@@ -72,7 +75,7 @@ namespace flappy
 
             void step(const float delta, Flappy &) override
             {
-                std::any_cast<UserData &>(userData).delta = delta;
+                userData.delta = delta;
                 population->step();
             }
 

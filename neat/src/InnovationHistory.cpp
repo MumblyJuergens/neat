@@ -6,7 +6,8 @@
 
 namespace neat
 {
-    innovation_t s_global_innovation_number{};
+    innovation_t InnovationHistory::s_global_innovation_number = 0;
+    std::unordered_map<iipair, innovation_t, InnovationHistory::iipair_hash> InnovationHistory::data;
 
     innovation_t InnovationHistory::next_global_innovation_number() noexcept
     {
@@ -27,7 +28,5 @@ namespace neat
             return num;
         }
     }
-
-    InnovationHistory Brain::s_innovation_history;
 
 } // End namespace neat;

@@ -1,14 +1,15 @@
 #pragma once
 
-#include <any>
 #include <memory>
+#include <cereal/types/memory.hpp>
 #include "neat/neat_export.h"
 #include "neat/types.hpp"
 #include "neat/Brain.hpp"
+#include "neat/UserData.hpp"
+#include "neat/Simulation.hpp"
 
 namespace neat
 {
-    class Simulation;
     class SimulationInfo;
 
     class [[nodiscard]] NEAT_EXPORT Genome final
@@ -30,9 +31,25 @@ namespace neat
         {
         }
 
+
         public:
         [[nodiscard]] Genome(std::shared_ptr<Simulation> simulation) noexcept
             : m_simulation{ std::move(simulation) } {
+        }
+
+        /// @brief Do *not* make blank Genomes, it's just for easy serialization.
+        Genome() = default;
+
+        template<typename Archive>
+        void serialize(Archive &ar)
+        {
+            ar(m_brain, m_fitness, m_adjusted_fitness, m_sim_is_done, m_sim_is_perfect, m_species, m_id);
+        }
+
+        template<typename Archive>
+        static void serialize_static(Archive &ar)
+        {
+            ar(s_id, s_champ_id);
         }
 
         constexpr Genome(const Genome &) = delete;
@@ -55,10 +72,10 @@ namespace neat
         constexpr void set_species(const int value) noexcept { m_species = value; }
         constexpr void make_current_champ() noexcept { s_champ_id = m_id; }
 
-        void step(std::any *const userData);
+        void step(UserData *const userData);
         void step(SimulationInfo &info, activator_f *activator);
         void skip(SimulationInfo &info);
-        void skip(std::any *const userData);
+        void skip(UserData *const userData);
 
     };
 

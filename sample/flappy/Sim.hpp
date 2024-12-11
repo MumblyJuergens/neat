@@ -16,7 +16,7 @@ namespace flappy
 
         void step(neat::SimulationInfo &info) override
         {
-            auto *const userData = std::any_cast<UserData>(info.user_data);
+            auto *const userData = dynamic_cast<UserData *>(info.user_data);
             const Pipe *const pipe0 = &userData->pipes->at(0);
             const float input1 = Config::window_heightf / pipe0->top_distance(bird, Config::window_heightf);
             const float input2 = Config::window_heightf / pipe0->bottom_distance(bird, Config::window_heightf);

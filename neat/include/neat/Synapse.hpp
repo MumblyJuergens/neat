@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cereal/access.hpp>
 #include "neat/Config.hpp"
 #include "neat/Random.hpp"
 #include "neat/types.hpp"
@@ -35,6 +36,15 @@ namespace neat
         constexpr void set_out(const innovation_t value) noexcept { m_out = value; }
         constexpr void set_weight(const real_t value) noexcept { m_weight = value; }
         constexpr void set_enabled(const bool value) noexcept { m_enabled = value; }
+
+        /// @brief Don't use. For serialization only.
+        Synapse() = default;
+
+        template<typename Archive>
+        void serialize(Archive &ar)
+        {
+            ar(m_in, m_out, m_weight, m_enabled, m_innovation);
+        }
 
         void mutate_weight(const Config &cfg)
         {

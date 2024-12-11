@@ -20,6 +20,25 @@ namespace neat
         int m_layer{};
 
         public:
+
+        [[nodiscard]] constexpr auto number() const noexcept { return m_number; }
+        [[nodiscard]] constexpr auto type() const noexcept { return m_type; }
+        [[nodiscard]] constexpr auto value() const noexcept { return m_value; }
+        [[nodiscard]] constexpr auto layer() const noexcept { return m_layer; }
+
+        constexpr void set_number(const innovation_t value) noexcept { m_number = value; }
+        constexpr void set_value(const real_t value) noexcept { m_value = value; }
+        constexpr void set_layer(const int value) noexcept { m_layer = value; }
+
+        /// @brief Don't use. For serialization only.
+        Neuron() = default;
+
+        template<typename Archive>
+        void serialize(Archive &ar)
+        {
+            ar(m_number, m_type, m_value, m_layer);
+        }
+
         [[nodiscard]] constexpr Neuron(const innovation_t number, const NeuronType type) noexcept
             : m_number{ number }, m_type{ type }, m_layer{ type == NeuronType::input ? 0 : 1 }
         {
@@ -42,15 +61,6 @@ namespace neat
             m_layer = std::exchange(that.m_layer, 0);
             return *this;
         }
-
-        [[nodiscard]] constexpr auto number() const noexcept { return m_number; }
-        [[nodiscard]] constexpr auto type() const noexcept { return m_type; }
-        [[nodiscard]] constexpr auto value() const noexcept { return m_value; }
-        [[nodiscard]] constexpr auto layer() const noexcept { return m_layer; }
-
-        constexpr void set_number(const innovation_t value) noexcept { m_number = value; }
-        constexpr void set_value(const real_t value) noexcept { m_value = value; }
-        constexpr void set_layer(const int value) noexcept { m_layer = value; }
 
         [[nodiscard]] static constexpr auto is_input(const Neuron &n) noexcept { return n.m_type == NeuronType::input; }
         [[nodiscard]] static constexpr auto is_output(const Neuron &n) noexcept { return n.m_type == NeuronType::output; }

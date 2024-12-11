@@ -19,6 +19,8 @@
 #include <mj/console.hpp>
 #include <mj/nameof.hpp>
 #include <mj/lambda.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/json.hpp>
 #include "shaders.hpp"
 
 namespace snake
@@ -45,6 +47,7 @@ namespace snake
 
         static constexpr glm::vec<2, T> start_position{ game_size / static_cast<T>(2), game_size / static_cast<T>(2) };
         static constexpr T start_length = static_cast<T>(4);
+        static constexpr T auto_grow_size = static_cast<T>(0);
     };
 
     enum class TileType { none, snake, border, food };
@@ -92,12 +95,18 @@ namespace snake
         glm::u8vec4 color{};
     };
 
-    struct UserData
+    struct UserData : public neat::UserData
     {
         glube::BuildingBuffer<Vertex> *game_vbo{};
         glube::BuildingBuffer<Vertex> *champ_vbo{};
         int simId{};
         float energy_max{ 500 };
+
+        template<typename Archive>
+        void serialize(Archive &ar)
+        {
+            ar(simId, energy_max);
+        }
     };
 
     struct GameState : public neat::Simulation
@@ -107,6 +116,7 @@ namespace snake
 
         std::size_t snake_facing{};
         int snake_length{ Config<int>::start_length };
+        int auto_grow_remaining{ Config<int>::auto_grow_size };
         glm::ivec2 snake_head{ Config<int>::start_position };
         glm::ivec2 food_position{};
         float lifespan{};
@@ -138,7 +148,7 @@ namespace snake
 
         void init(neat::SimulationInfo &info) override
         {
-            energy = std::any_cast<UserData>(info.user_data)->energy_max;
+            energy = dynamic_cast<UserData *>(info.user_data)->energy_max;
         }
 
         void reset()
@@ -183,7 +193,7 @@ namespace snake
 
         void skip(neat::SimulationInfo &info) override
         {
-            std::any_cast<UserData>(info.user_data)->simId++;
+            dynamic_cast<UserData *>(info.user_data)->simId++;
         }
 
         template<typename T>
@@ -239,7 +249,7 @@ namespace snake
 
         void step(neat::SimulationInfo &info) override
         {
-            UserData *const userData = std::any_cast<UserData>(info.user_data);
+            UserData *const userData = dynamic_cast<UserData *>(info.user_data);
             const auto offset = glm::ivec2{ userData->simId % Config<int>::sim_games_displayed_size, userData->simId / Config<int>::sim_games_displayed_size } *Config<int>::game_size;
 
             info.inputs.push_back(1.0_r); // Bias.
@@ -312,7 +322,7 @@ namespace snake
 
                 lifespan += 1.0f;
                 energy -= 1.0f;
-                info.fitness = static_cast<neat::real_t>(snake_length - Config<int>::start_length) + 0.001f;// * snake_length) + lifespan * 0.01f;
+                info.fitness = static_cast<neat::real_t>(snake_length - (Config<int>::start_length + (Config<int>::auto_grow_size - auto_grow_remaining))) + 0.001f;// * snake_length) + lifespan * 0.01f;
             }
             else
             {
@@ -338,12 +348,21 @@ namespace snake
                 place_food();
                 return true;
             case TileType::none:
-                for (auto &tile : tilesArray | mj::filter(&Tile::type, std::equal_to{}, TileType::snake))
+                if (auto_grow_remaining > 0)
                 {
-                    --tile.value;
-                    if (tile.value <= 0)
+                    --auto_grow_remaining;
+                    ++snake_length;
+                    energy = energy_max;
+                }
+                else
+                {
+                    for (auto &tile : tilesArray | mj::filter(&Tile::type, std::equal_to{}, TileType::snake))
                     {
-                        tile.type = TileType::none;
+                        --tile.value;
+                        if (tile.value <= 0)
+                        {
+                            tile.type = TileType::none;
+                        }
                     }
                 }
                 next.type = TileType::snake;
@@ -354,24 +373,31 @@ namespace snake
         }
     };
 
+
 } // End namespace snake.
 
+enum class UserCommand
+{
+    none,
+    save,
+    load,
+};
 
-
-int main()
+int main(int argc, char **argv)
 {
     using namespace snake;
 
-    std::any userData = UserData{};
+    UserData userData;
 
     neat::Population population{
-        []() { return std::make_shared<GameState>(); },
+        std::make_unique<neat::EasySimulationFactory<snake::GameState>>(),
         GameState::population_config,
-        &userData,
+        &userData
     };
     population.set_stats_string_handler([](const std::string stats) { std::print("{}", stats); });
 
     bool skipgen{};
+    UserCommand userCommand = UserCommand::none;
 
     glube::Window window(Config<int>::window_width, Config<int>::window_height, "Snake");
     window.swap_interval(1);
@@ -380,11 +406,19 @@ int main()
         if (event.key == glube::Key::tab && event.action == glube::KeyAction::pressed) skipgen = true;
         if (event.key == glube::Key::keypad_add && event.action == glube::KeyAction::pressed)
         {
-            std::println("Energy Max: {}", std::any_cast<UserData>(&userData)->energy_max += 1000);
+            std::println("Energy Max: {}", userData.energy_max += 1000);
         }
         if (event.key == glube::Key::keypad_subtract && event.action == glube::KeyAction::pressed)
         {
-            std::println("Energy Max: {}", std::any_cast<UserData>(&userData)->energy_max -= 1000);
+            std::println("Energy Max: {}", userData.energy_max -= 1000);
+        }
+        if (event.key == glube::Key::s && event.action == glube::KeyAction::pressed)
+        {
+            userCommand = UserCommand::save;
+        }
+        if (event.key == glube::Key::l && event.action == glube::KeyAction::pressed)
+        {
+            userCommand = UserCommand::load;
         }
         });
 
@@ -412,11 +446,26 @@ int main()
 
     GameState state;
 
-    std::any_cast<UserData>(&userData)->game_vbo = &game_vbo;
-    std::any_cast<UserData>(&userData)->champ_vbo = &champ_vbo;
+    userData.game_vbo = &game_vbo;
+    userData.champ_vbo = &champ_vbo;
 
-    std::ofstream csv_fpg{ "fitness_per_generation.csv" };
-    std::println(csv_fpg, "Generation,Fitness Max,Fitness Avg,Collide Border,Collide Snake,Collide Food,Energy Zero,Turn Left,Turn Right,Turn None");
+    std::ofstream csv_fpg{ "fitness_per_generation.csv", std::ios::app };
+    csv_fpg.seekp(0, std::ios::end);
+    if (csv_fpg.tellp() < 10) // Using 10 because 0 is unreliable.
+    {
+        std::println(csv_fpg, "Generation,Fitness Max,Fitness Avg,Collide Border,Collide Snake,Collide Food,Energy Zero,Turn Left,Turn Right,Turn None");
+    }
+
+    if (argc == 2 && std::strcmp(argv[1], "load") == 0)
+    {
+        std::ifstream brainin{ "state.json" };
+        if (brainin)
+        {
+            cereal::JSONInputArchive archive{ brainin };
+            archive(population, userData);
+            population.reset_champ();
+        }
+    }
 
     while (!window.should_close())
     {
@@ -425,7 +474,7 @@ int main()
         glViewport(0, 0, Config<int>::window_width, Config<int>::window_height);
 
         population.step();
-        std::any_cast<UserData>(&userData)->simId = 0;
+        userData.simId = 0;
 
         program.activate();
 
@@ -466,10 +515,25 @@ int main()
             );
             GameState::stats_reset();
             skipgen = false;
+            if (userCommand == UserCommand::save)
+            {
+                std::ofstream brainout{ "state.json" };
+                cereal::JSONOutputArchive archive{ brainout };
+                archive(population, userData);
+            }
+            if (userCommand == UserCommand::load)
+            {
+                std::ifstream brainin{ "state.json" };
+                cereal::JSONInputArchive archive{ brainin };
+                archive(population, userData);
+                population.reset_champ();
+            }
+            userCommand = UserCommand::none;
             population.new_generation();
         }
 
         csv_fpg.flush();
+
 
         window.swap_buffers();
         window.poll_events();

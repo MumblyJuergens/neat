@@ -5,7 +5,7 @@
 
 namespace neat
 {
-    void Genome::step(std::any *const userData)
+    void Genome::step(UserData *const userData)
     {
         SimulationInfo info{ *this, m_fitness, userData };
         if (!m_simulation->is_inited())
@@ -19,7 +19,7 @@ namespace neat
         m_sim_is_perfect = info.is_perfect;
     }
 
-    void Genome::skip(std::any *const userData)
+    void Genome::skip(UserData *const userData)
     {
         SimulationInfo info{ *this, m_fitness, userData };
         m_simulation->skip(info);
