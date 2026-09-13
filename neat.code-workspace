@@ -124,5 +124,9 @@
 			"pointers": "cpp"
 		},
 		"editor.formatOnSave": true,
+		"cSpell.words": [
+			"iipair",
+			"randr"
+		],
 	}
 }

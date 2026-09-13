@@ -2,4 +2,4 @@
 
 namespace neat
 {
-} // End namesapce neat.
+} // namespace neat

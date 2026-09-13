@@ -23,7 +23,7 @@ add_executable(neat_sample_flappy
 "flappy/UserData.hpp"
 "flappy/Vertex.hpp"
 )
-target_compile_features(neat_sample_flappy PUBLIC cxx_std_23)
+target_compile_features(neat_sample_flappy PUBLIC cxx_std_26)
 target_link_libraries(neat_sample_flappy PUBLIC neat::neat neat::neatdrawgl glube)
 MJFullCompilerWarnings(neat_sample_flappy)
 # if (CMAKE_BUILD_TYPE STREQUAL "Release")
