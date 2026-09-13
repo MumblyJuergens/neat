@@ -14,3 +14,4 @@ build/
 out/
 .vs/
 Doxyfile
+/fitness_per_generation.csv

@@ -3,8 +3,8 @@
 #include "neat/Config.hpp"
 #include "neat/Neuron.hpp"
 #include "neat/Synapse.hpp"
-#include "neat/neat_export.h"
 #include "neat/types.hpp"
+#include "neat_export.h"
 #include <cereal/types/vector.hpp>
 #include <mj/size.hpp>
 #include <string>

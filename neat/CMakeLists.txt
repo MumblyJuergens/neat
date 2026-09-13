@@ -1,6 +1,8 @@
 option(NEAT_DOUBLE_PRECISION "Use double instead of float" OFF)
 
 add_library(neat)
+include(GenerateExportHeader)
+generate_export_header(neat)
 target_sources(neat
     PRIVATE
     "src/Brain.cpp"
@@ -27,6 +29,12 @@ target_sources(neat
     "include/neat/Synapse.hpp"
     "include/neat/types.hpp"
     "include/neat/UserData.hpp"
+    FILE_SET generated_headers
+    TYPE HEADERS
+    BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
+    FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/neat_export.h
+    ${CMAKE_CURRENT_BINARY_DIR}/neat/configure.hpp
 )
 add_library(neat::neat ALIAS neat)
 target_compile_features(neat PUBLIC cxx_std_26)
@@ -35,3 +43,9 @@ FullCompilerWarnings(neat PUBLIC)
 
 configure_file("configure.hpp.in" "neat/configure.hpp")
 target_include_directories(neat PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
+
+install(
+    TARGETS neat
+    FILE_SET HEADERS
+    FILE_SET generated_headers
+)

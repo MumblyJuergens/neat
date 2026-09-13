@@ -3,8 +3,8 @@
 #include "neat/Brain.hpp"
 #include "neat/Simulation.hpp"
 #include "neat/UserData.hpp"
-#include "neat/neat_export.h"
 #include "neat/types.hpp"
+#include "neat_export.h"
 #include <cereal/types/memory.hpp>
 #include <memory>
 
