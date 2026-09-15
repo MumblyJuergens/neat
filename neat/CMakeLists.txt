@@ -29,6 +29,7 @@ target_sources(neat
     "include/neat/Synapse.hpp"
     "include/neat/types.hpp"
     "include/neat/UserData.hpp"
+    "include/neat/SimplePopulation.hpp"
     FILE_SET generated_headers
     TYPE HEADERS
     BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR}

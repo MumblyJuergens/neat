@@ -6,7 +6,9 @@
 #include "neat/types.hpp"
 #include "neat_export.h"
 #include <cereal/types/memory.hpp>
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 namespace neat
 {
@@ -24,6 +26,7 @@ class [[nodiscard]] NEAT_EXPORT Genome final
     static inline int s_id{};
     static inline int s_champ_id{};
     int m_id{++s_id};
+    int m_index{};
 
     [[nodiscard]] Genome(const Genome &other, std::shared_ptr<Simulation> freshSimulation) noexcept
         : m_brain{other.m_brain}, m_simulation{freshSimulation}
@@ -65,14 +68,18 @@ class [[nodiscard]] NEAT_EXPORT Genome final
     [[nodiscard]] auto &simulation() const noexcept { return *m_simulation; }
     [[nodiscard]] constexpr auto species() const noexcept { return m_species; }
     [[nodiscard]] auto is_current_champ() const noexcept { return m_id == s_champ_id; }
+    [[nodiscard]] auto index() const noexcept { return m_index; }
 
+    constexpr void set_fitness(const real_t value) noexcept { m_fitness = value; }
     constexpr void set_adjusted_fitness(const real_t value) noexcept { m_adjusted_fitness = value; }
     constexpr void set_simulation_is_done(const bool value) noexcept { m_sim_is_done = value; }
     constexpr void set_species(const int value) noexcept { m_species = value; }
     constexpr void make_current_champ() noexcept { s_champ_id = m_id; }
+    constexpr void set_index(const int value) noexcept { m_index = value; }
 
     void step(UserData *const userData);
     void step(SimulationInfo &info, activator_f *activator);
+    void simple_step(const std::vector<real_t> &inputs, std::vector<real_t> &outputs, activator_f *activator);
     void skip(SimulationInfo &info);
     void skip(UserData *const userData);
 };

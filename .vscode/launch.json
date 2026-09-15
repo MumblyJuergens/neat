@@ -5,15 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(LLDB) Debug",
             "type": "lldb",
             "request": "launch",
-            "program": "${command:cmake.launchTargetPath}",
-            "args": [
-                "load"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "name": "Launch",
+            "program": "${workspaceFolder}/build/sample/neat_sample_snakesdl",
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
+        // {
+        //     "name": "(LLDB) Debug",
+        //     "type": "lldb-dap",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder}/build/sample/neat_sample_snakesdl",
+        //     "args": [],
+        //     "cwd": "${workspaceFolder}",
+        //     "console": "integratedTerminal"
+        // }
     ]
 }

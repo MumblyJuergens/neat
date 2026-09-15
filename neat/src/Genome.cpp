@@ -2,6 +2,7 @@
 #include "neat/Genome.hpp"
 #include "neat/Simulation.hpp"
 #include "neat/SimulationInfo.hpp"
+#include "neat/types.hpp"
 
 namespace neat
 {
@@ -30,6 +31,11 @@ void Genome::skip(UserData *const userData)
 void Genome::step(SimulationInfo &info, activator_f *activator)
 {
     info.outputs = m_brain.run_network(info.inputs, activator);
+}
+
+void Genome::simple_step(const std::vector<real_t> &inputs, std::vector<real_t> &outputs, activator_f *activator)
+{
+    outputs = m_brain.run_network(inputs, *activator);
 }
 
 } // namespace neat

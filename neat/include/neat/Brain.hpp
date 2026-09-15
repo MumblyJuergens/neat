@@ -12,6 +12,10 @@
 
 namespace neat
 {
+
+/**
+    @brief The core of a Genome. Kept separate to simplify the model.
+ */
 class [[nodiscard]] NEAT_EXPORT Brain final
 {
     std::vector<Synapse> m_synapses;
