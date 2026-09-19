@@ -8,6 +8,7 @@ project(neat
 
 option(NEAT_BUILD_TESTS "Build tests for neat")
 option(NEAT_BUILD_SAMPLE "Build sample for neat")
+option(NEAT_BUILD_GDEXTENSION "Build Godot GDExtension")
 
 include(cmake/CPM.cmake)
 include(cmake/helpers.cmake)
@@ -18,7 +19,7 @@ set(SKIP_PERFORMANCE_COMPARISON ON)
 CPMAddPackage("gh:USCiLab/cereal#master")
 
 add_subdirectory("neat")
-add_subdirectory("neatdraw")
+# add_subdirectory("neatdraw")
 
 if(${NEAT_BUILD_TESTS} OR PROJECT_IS_TOP_LEVEL)
     add_subdirectory("tests")
@@ -27,6 +28,11 @@ endif()
 if(${NEAT_BUILD_SAMPLE} OR PROJECT_IS_TOP_LEVEL)
     add_subdirectory("sample")
 endif()
+
+if(${NEAT_BUILD_GDEXTENSION} OR PROJECT_IS_TOP_LEVEL)
+    add_subdirectory("gdextension")
+endif()
+
 
 option(NEAT_BUILD_DOC "Build documentation" ON)
 if(NEAT_BUILD_DOC)

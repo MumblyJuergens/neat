@@ -98,13 +98,13 @@ class [[nodiscard]] Population final
     }
 
   public:
-    [[nodiscard]] Population(std::unique_ptr<SimulationFactory> simulationFactory, const Config &cfg = {},
+    [[nodiscard]] Population(std::unique_ptr<SimulationFactory> simulationFactory, const Config &p_cfg = {},
                              UserData *const userData = nullptr) noexcept
-        : cfg{cfg}, m_simulation_factory{std::move(simulationFactory)}, m_population_size{cfg.setup_population_size},
-          m_user_data{userData}
+        : cfg{p_cfg}, m_simulation_factory{std::move(simulationFactory)},
+          m_population_size{p_cfg.setup_population_size}, m_user_data{userData}
     {
         build_population(m_genomes, Init::yes);
-        m_champ.init(cfg, Init::yes);
+        m_champ.init(p_cfg, Init::yes);
     }
 
     void reset_champ()

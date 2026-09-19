@@ -1,13 +1,15 @@
 #pragma once
 
 #include "config.hpp"
+#include "enums.hpp"
 #include "food.hpp"
 #include "neat/Config.hpp"
 #include "neat/Genome.hpp"
-#include "neat/Random.hpp"
 #include "neat/SimplePopulation.hpp"
+#include "raycast.hpp"
 #include "sdlmath.hpp"
 #include "snake.hpp"
+#include <SDL3/SDL_blendmode.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_keycode.h>
@@ -26,6 +28,13 @@
 namespace snakesdl
 {
 
+enum class RenderSnakeStyle
+{
+    ALL,
+    DIM_LOSERS,
+    CHAMP_ONLY,
+};
+
 struct Game
 {
     mjsdl::Window window;
@@ -38,15 +47,16 @@ struct Game
     Food food;
     bool render{true};
     bool vsync{true};
-    bool champ_only{};
+    RenderSnakeStyle render_style{RenderSnakeStyle::ALL};
 
-    static constexpr int POPULATION_SIZE = 1000;
+    static constexpr int POPULATION_SIZE = 300;
 
     void init()
     {
         std::tie(window, renderer) = mjsdl::Renderer::create_window_and_renderer(
             "NEAT Snake SDL3 - snakesdl", config::WINDOW_SIZE, config::WINDOW_SIZE, SDL_WINDOW_RESIZABLE);
         SDL_SetRenderScale(renderer.get(), config::POINT_SIZE, config::POINT_SIZE);
+        SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
         set_vsync(true);
 
         snakes.resize(POPULATION_SIZE);
@@ -54,13 +64,14 @@ struct Game
 
         neat::Config cfg{
             .setup_population_size = POPULATION_SIZE,
-            .setup_input_nodes = 10,
+            .setup_input_nodes = 17,
             .setup_output_nodes = 2,
             .setup_inital_connection_rate = 0.0f,
             .mutate_new_connection_rate = 2.0f,
             .mutate_new_node_rate = 0.5f,
         };
         population = std::make_unique<neat::SimplePopulation>(cfg);
+        // population->set_stats_string_handler([](const std::string &s) { std::println("{}", s); });
     }
 
     void iterate(double delta)
@@ -85,21 +96,36 @@ struct Game
                 }
                 Snake &snake = snakes[i];
                 const auto snake_food = food[current_food[i]];
-                const auto foodchecker = [snake_food](SDL_FPoint p) {
-                    return mjsdl::math::equal_within_ulps(p, snake_food, 1);
-                };
+
+                const auto ray_lb = raycast(snake, snake_food, Directions::Turn::LEFT_BACK);
+                const auto ray_l = raycast(snake, snake_food, Directions::Turn::LEFT);
+                const auto ray_lf = raycast(snake, snake_food, Directions::Turn::LEFT_FRONT);
+                const auto ray_f = raycast(snake, snake_food, Directions::Turn::NOPE);
+                const auto ray_rf = raycast(snake, snake_food, Directions::Turn::RIGHT_FRONT);
+                const auto ray_r = raycast(snake, snake_food, Directions::Turn::RIGHT);
+                const auto ray_rb = raycast(snake, snake_food, Directions::Turn::RIGHT_BACK);
+
+                // clang-format off
                 std::vector<float> inputs{
-                    snake.raycast(SnakeTurn::TURN_LEFT, Snake::tail_collide, snake),
-                    snake.raycast(SnakeTurn::TURN_NOPE, Snake::tail_collide, snake),
-                    snake.raycast(SnakeTurn::TURN_RIGHT, Snake::tail_collide, snake),
-                    snake.raycast(SnakeTurn::TURN_LEFT, Snake::just_wall),
-                    snake.raycast(SnakeTurn::TURN_NOPE, Snake::just_wall),
-                    snake.raycast(SnakeTurn::TURN_RIGHT, Snake::just_wall),
-                    snake.raycast(SnakeTurn::TURN_LEFT, foodchecker),
-                    snake.raycast(SnakeTurn::TURN_NOPE, foodchecker),
-                    snake.raycast(SnakeTurn::TURN_RIGHT, foodchecker),
+                    1.0f, // Bias.
+                    ray_lb.distance,
+                    ray_lb.type,
+                    ray_l.distance,
+                    ray_l.type,
+                    ray_lf.distance,
+                    ray_lf.type,
+                    ray_f.distance,
+                    ray_f.type,
+                    ray_rf.distance,
+                    ray_rf.type,
+                    ray_r.distance,
+                    ray_r.type,
+                    ray_rb.distance,
+                    ray_rb.type,
                     static_cast<float>(snake.points.size()) * 0.01f,
+                    static_cast<float>(snake.direction) / 8.0f,
                 };
+                // clang-format on
 
                 if (mjsdl::math::equal_within_ulps(snake.points[0], snake_food, 1)) {
                     snake.fed = true;
@@ -111,8 +137,13 @@ struct Game
                 snake.is_champ = genome.is_current_champ();
 
                 genome.simple_step(inputs, outputs, std::tanh);
+
+                // std::println("{} {} {} -> {} {}", ray_l.distance, ray_f.distance, ray_r.distance, outputs[0],
+                //              outputs[1]);
+
                 if (outputs[0] > 0.05f) snake.turn_left();
                 if (outputs[1] > 0.05f) snake.turn_right();
+
                 ++i;
                 snake.move();
                 if (snake.dead) {
@@ -138,14 +169,20 @@ struct Game
             for (size_t i{}; i < snakes.size(); ++i) {
                 const auto &snake = snakes[i];
                 const auto food_pos = food[current_food[i]];
-                if (!snake.dead && (!champ_only || snake.is_champ)) {
-                    snake.draw(renderer);
-                    SDL_RenderPoint(renderer.get(), food_pos.x, food_pos.y);
+                if (!snake.dead) {
+                    if (render_style == RenderSnakeStyle::ALL || snake.is_champ) {
+                        snake.draw(renderer);
+                        SDL_RenderPoint(renderer.get(), food_pos.x, food_pos.y);
+                    } else if (render_style == RenderSnakeStyle::DIM_LOSERS) {
+                        snake.draw(renderer, 20);
+                        SDL_RenderPoint(renderer.get(), food_pos.x, food_pos.y);
+                    }
                 }
             }
 
             SDL_SetRenderScale(renderer.get(), 1.0f, 1.0f);
-            SDL_RenderDebugTextFormat(renderer.get(), 20, 20, "FPS: %f", fps);
+            SDL_SetRenderDrawColor(renderer.get(), 255, 255, 255, SDL_ALPHA_OPAQUE);
+            SDL_RenderDebugTextFormat(renderer.get(), 20, 20, "FPS: %.2f", fps);
             SDL_SetRenderScale(renderer.get(), config::POINT_SIZE, config::POINT_SIZE);
 
             SDL_RenderPresent(renderer.get());
@@ -180,8 +217,12 @@ struct Game
                 std::println("VSync: {}", vsync);
             }
             if (event->key.key == SDLK_C) {
-                champ_only = !champ_only;
-                std::println("Champ Only: {}", champ_only);
+                switch (render_style) {
+                case RenderSnakeStyle::ALL: render_style = RenderSnakeStyle::DIM_LOSERS; break;
+                case RenderSnakeStyle::DIM_LOSERS: render_style = RenderSnakeStyle::CHAMP_ONLY; break;
+                case RenderSnakeStyle::CHAMP_ONLY: render_style = RenderSnakeStyle::ALL; break;
+                }
+                std::println("Render Style: {}", enum_to_string(render_style));
             }
         }
 

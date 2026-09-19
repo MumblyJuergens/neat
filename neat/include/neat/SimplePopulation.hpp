@@ -97,11 +97,11 @@ class [[nodiscard]] SimplePopulation final
     }
 
   public:
-    [[nodiscard]] SimplePopulation(const Config &cfg = {}) noexcept
-        : cfg{cfg}, m_population_size{cfg.setup_population_size}
+    [[nodiscard]] SimplePopulation(const Config &p_cfg = {}) noexcept
+        : cfg{p_cfg}, m_population_size{p_cfg.setup_population_size}
     {
         build_population(m_genomes, Init::yes);
-        m_champ.init(cfg, Init::yes);
+        m_champ.init(p_cfg, Init::yes);
     }
 
     void reset_champ()
@@ -135,7 +135,9 @@ class [[nodiscard]] SimplePopulation final
             if (genome.fitness() > m_generation_max_fitness) {
                 m_generation_max_fitness = genome.fitness();
                 genome.make_current_champ();
-                // m_stats_string_handler(std::format("Generation max: {}\r", m_generation_max_fitness));
+                if (m_stats_string_handler) {
+                    m_stats_string_handler(std::format("Generation max: {}\r", m_generation_max_fitness));
+                }
             }
             if (genome.fitness() > m_max_fitness) {
                 m_max_fitness = genome.fitness();

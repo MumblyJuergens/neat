@@ -25,8 +25,8 @@ class [[nodiscard]] SimulationInfo
 
     void run(activator_f *activator) { genome.step(*this, activator); }
 
-    [[nodiscard]] SimulationInfo(Genome &genome, real_t fitness, UserData *const user_data)
-        : genome{genome}, fitness{fitness}, user_data{user_data}
+    [[nodiscard]] SimulationInfo(Genome &p_genome, real_t p_fitness, UserData *const p_user_data)
+        : genome{p_genome}, fitness{p_fitness}, user_data{p_user_data}
     {
     }
 };

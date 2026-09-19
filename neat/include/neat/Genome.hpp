@@ -42,7 +42,7 @@ class [[nodiscard]] NEAT_EXPORT Genome final
     template <typename Archive>
     void serialize(Archive &ar)
     {
-        ar(m_brain, m_fitness, m_adjusted_fitness, m_sim_is_done, m_sim_is_perfect, m_species, m_id);
+        ar(m_brain, m_fitness, m_adjusted_fitness, m_sim_is_done, m_sim_is_perfect, m_species, m_id, m_index);
     }
 
     template <typename Archive>

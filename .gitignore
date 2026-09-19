@@ -15,3 +15,5 @@ out/
 .vs/
 Doxyfile
 /fitness_per_generation.csv
+/gdextension/gdneat/addons/gdneat/bin/linux
+*.uid

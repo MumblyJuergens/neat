@@ -2,6 +2,12 @@
 
 #include "neat/types.hpp"
 
+/// @file Config.hpp
+/// @brief Configuration for a simulation.
+///
+/// *Important:* This file should be kept up to date with GDNeatConfig for the Godot GDExtension. Particularly if
+/// properties need to be added or removed.
+
 namespace neat
 {
 class Config

@@ -1,4 +1,5 @@
 #include "game.hpp"
+#include <SDL3/SDL_init.h>
 #include <print>
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL_main.h>
@@ -43,5 +44,5 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 void SDL_AppQuit(void *appstate, [[maybe_unused]] SDL_AppResult result)
 {
     std::unique_ptr<snakesdl::Game> game{reinterpret_cast<snakesdl::Game *>(appstate)};
-    std::println("Exiting with result {}", static_cast<int>(result));
+    std::println("Exiting normally: {}", result == SDL_APP_SUCCESS);
 }
