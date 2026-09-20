@@ -29,10 +29,6 @@ if(${NEAT_BUILD_SAMPLE} OR PROJECT_IS_TOP_LEVEL)
     add_subdirectory("sample")
 endif()
 
-if(${NEAT_BUILD_GDEXTENSION} OR PROJECT_IS_TOP_LEVEL)
-    add_subdirectory("gdextension")
-endif()
-
 
 option(NEAT_BUILD_DOC "Build documentation" ON)
 if(NEAT_BUILD_DOC)
