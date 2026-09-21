@@ -38,7 +38,7 @@ target_sources(neat
     ${CMAKE_CURRENT_BINARY_DIR}/neat/configure.hpp
 )
 add_library(neat::neat ALIAS neat)
-target_compile_features(neat PUBLIC cxx_std_23)
+target_compile_features(neat PUBLIC cxx_std_26)
 target_link_libraries(neat PUBLIC mj::mj cereal::cereal)
 FullCompilerWarnings(neat PUBLIC)
 
