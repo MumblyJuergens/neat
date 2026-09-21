@@ -3,6 +3,7 @@
 #include "neat/types.hpp"
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/utility.hpp>
+#include <sys/types.h>
 #include <unordered_map>
 
 namespace neat
@@ -27,23 +28,23 @@ class [[nodiscard]] InnovationHistory final
             return x;
         }
 
-        [[nodiscard]] static std::uint32_t mixup(std::uint32_t x) noexcept
-        {
-            static constexpr std::uint32_t m1 = 0x21f0aaad;
-            static constexpr std::uint32_t m2 = 0x735a2d97;
-            x ^= x >> 16;
-            x *= m1;
-            x ^= x >> 15;
-            x *= m2;
-            x ^= x >> 15;
-            return x;
-        }
+        // [[nodiscard]] static std::uint32_t mixup(std::uint32_t x) noexcept
+        // {
+        //     static constexpr std::uint32_t m1 = 0x21f0aaad;
+        //     static constexpr std::uint32_t m2 = 0x735a2d97;
+        //     x ^= x >> 16;
+        //     x *= m1;
+        //     x ^= x >> 15;
+        //     x *= m2;
+        //     x ^= x >> 15;
+        //     return x;
+        // }
 
         [[nodiscard]] std::size_t operator()(const iipair &v) const noexcept
         {
             std::size_t seed = 0;
-            seed = mixup(seed + 0x9e3779b9 + static_cast<std::size_t>(v.first));
-            seed = mixup(seed + 0x9e3779b9 + static_cast<std::size_t>(v.second));
+            seed = static_cast<uint32_t>(mixup(seed + 0x9e3779b9 + static_cast<std::size_t>(v.first)));
+            seed = static_cast<uint32_t>(mixup(seed + 0x9e3779b9 + static_cast<std::size_t>(v.second)));
             return seed;
         }
     };
