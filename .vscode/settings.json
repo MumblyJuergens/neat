@@ -9,5 +9,6 @@
         "randr",
         "Speciate",
         "STREQUAL"
-    ]
+    ],
+    "editor.formatOnSave": true
 }

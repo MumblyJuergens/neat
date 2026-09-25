@@ -1,13 +1,9 @@
 #pragma once
 
 #include "neat/Brain.hpp"
-#include "neat/Simulation.hpp"
-#include "neat/UserData.hpp"
 #include "neat/types.hpp"
 #include "neat_export.h"
 #include <cereal/types/memory.hpp>
-#include <cstddef>
-#include <memory>
 #include <vector>
 
 namespace neat
@@ -19,7 +15,6 @@ class [[nodiscard]] NEAT_EXPORT Genome final
     Brain m_brain;
     real_t m_fitness{};
     real_t m_adjusted_fitness{};
-    std::shared_ptr<Simulation> m_simulation;
     bool m_sim_is_done{};
     bool m_sim_is_perfect{};
     int m_species{};
@@ -28,16 +23,9 @@ class [[nodiscard]] NEAT_EXPORT Genome final
     int m_id{++s_id};
     int m_index{};
 
-    [[nodiscard]] Genome(const Genome &other, std::shared_ptr<Simulation> freshSimulation) noexcept
-        : m_brain{other.m_brain}, m_simulation{freshSimulation}
-    {
-    }
-
   public:
-    [[nodiscard]] Genome(std::shared_ptr<Simulation> simulation) noexcept : m_simulation{std::move(simulation)} {}
-
-    /// @brief Do *not* make blank Genomes, it's just for easy serialization.
-    Genome() = default;
+  
+    [[nodiscard]] Genome() noexcept = default;
 
     template <typename Archive>
     void serialize(Archive &ar)
@@ -65,7 +53,6 @@ class [[nodiscard]] NEAT_EXPORT Genome final
     [[nodiscard]] constexpr auto adjusted_fitness() const noexcept { return m_adjusted_fitness; }
     [[nodiscard]] constexpr auto simulation_is_done() const noexcept { return m_sim_is_done; }
     [[nodiscard]] constexpr auto simulation_is_perfect() const noexcept { return m_sim_is_perfect; }
-    [[nodiscard]] auto &simulation() const noexcept { return *m_simulation; }
     [[nodiscard]] constexpr auto species() const noexcept { return m_species; }
     [[nodiscard]] auto is_current_champ() const noexcept { return m_id == s_champ_id; }
     [[nodiscard]] auto index() const noexcept { return m_index; }
@@ -77,11 +64,7 @@ class [[nodiscard]] NEAT_EXPORT Genome final
     constexpr void make_current_champ() noexcept { s_champ_id = m_id; }
     constexpr void set_index(const int value) noexcept { m_index = value; }
 
-    void step(UserData *const userData);
-    void step(SimulationInfo &info, activator_f *activator);
     void simple_step(const std::vector<real_t> &inputs, std::vector<real_t> &outputs, activator_f *activator);
-    void skip(SimulationInfo &info);
-    void skip(UserData *const userData);
 };
 
 inline void swap(Genome &a, Genome &b)

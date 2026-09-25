@@ -3,10 +3,10 @@
 # target_compile_options(cppfront_cppfront PUBLIC /bigobj)
 # endif()
 
-# add_executable(neat_sample_xor "xor/xor.cpp2")
-# target_compile_features(neat_sample_xor PUBLIC cxx_std_23)
-# target_link_libraries(neat_sample_xor PUBLIC neat::neat neat::neatdrawgl glube)
-# MJFullCmpilerWarnings(neat_sample_xor)
+add_executable(neat_sample_xor "xor/xor.cpp")
+target_compile_features(neat_sample_xor PRIVATE cxx_std_26)
+target_link_libraries(neat_sample_xor PRIVATE neat::neat)
+FullCompilerWarnings(neat_sample_xor PRIVATE)
 
 # if (CMAKE_BUILD_TYPE STREQUAL "Release")
 #     MJSanitize(neat_sample_xor ON OFF ON OFF OFF)

@@ -3,15 +3,12 @@
 #include "neat/Config.hpp"
 #include "neat/Genome.hpp"
 #include "neat/InnovationHistory.hpp"
-#include "neat/SimulationFactory.hpp"
 #include "neat/Species.hpp"
-#include "neat/UserData.hpp"
 #include <algorithm>
 #include <cereal/types/memory.hpp>
 #include <cereal/types/vector.hpp>
 #include <concepts>
 #include <functional>
-#include <memory>
 #include <mj/algorithm.hpp>
 #include <mj/math.hpp>
 #include <mj/size.hpp>
@@ -75,7 +72,7 @@ class [[nodiscard]] SimplePopulation final
     void build_population(std::vector<Genome> &pop, const Init init)
     {
         for (int i{}; i < m_population_size; ++i) {
-            pop.emplace_back(nullptr).brain().init(cfg, init); // TODO: no init?
+            pop.emplace_back().brain().init(cfg, init); // TODO: no init?
         }
     }
 
@@ -215,7 +212,7 @@ class [[nodiscard]] SimplePopulation final
             int eliteCopied{};
             if (specie.size() > cfg.crossover_elite_size) {
                 eliteCopied = 1;
-                children.emplace_back(nullptr).brain() =
+                children.emplace_back().brain() =
                     std::ranges::find(m_genomes, specie.id(), &Genome::species)->brain();
             }
             const real_t averageSpeciesFitness =
@@ -229,12 +226,12 @@ class [[nodiscard]] SimplePopulation final
                 auto [worst, best] = std::ranges::minmax(parent0, parent1, std::less{}, &Genome::fitness);
                 auto child = Brain::crossover(best.brain(), worst.brain(), cfg);
                 child.mutate(cfg);
-                children.emplace_back(nullptr).brain() = child;
+                children.emplace_back().brain() = child;
             });
         }
 
         for (auto i{mj::isize(children)}; i < m_population_size; ++i) {
-            children.emplace_back(nullptr).brain().init(cfg, Init::yes);
+            children.emplace_back().brain().init(cfg, Init::yes);
             children[mj::sz_t(i)].set_index(i);
         }
 

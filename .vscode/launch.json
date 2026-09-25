@@ -7,8 +7,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Launch",
+            "name": "Launch Snake",
             "program": "${workspaceFolder}/build/sample/neat_sample_snakesdl",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Launch XOR",
+            "program": "${workspaceFolder}/build/sample/neat_sample_xor",
             "args": [],
             "cwd": "${workspaceFolder}"
         }

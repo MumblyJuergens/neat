@@ -1,6 +1,9 @@
-CPMAddPackage("gh:catchorg/Catch2@3.15.3")
+CPMAddPackage("gh:catchorg/Catch2@3.16.0")
 add_executable(neat_tests
     "tests.cpp"
+    test_brain.cpp
+    test_neuron.cpp
+    test_synapse.cpp
 )
 target_compile_features(neat_tests PUBLIC cxx_std_26)
 target_link_libraries(neat_tests PUBLIC neat Catch2::Catch2WithMain)

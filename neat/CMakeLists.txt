@@ -20,15 +20,10 @@ target_sources(neat
     "include/neat/InnovationHistory.hpp"
     "include/neat/neat.hpp"
     "include/neat/Neuron.hpp"
-    "include/neat/Population.hpp"
     "include/neat/Random.hpp"
-    "include/neat/Simulation.hpp"
-    "include/neat/SimulationFactory.hpp"
-    "include/neat/SimulationInfo.hpp"
     "include/neat/Species.hpp"
     "include/neat/Synapse.hpp"
     "include/neat/types.hpp"
-    "include/neat/UserData.hpp"
     "include/neat/SimplePopulation.hpp"
     FILE_SET generated_headers
     TYPE HEADERS
