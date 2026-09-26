@@ -1,11 +1,12 @@
 #pragma once
 
 #include "neat/configure.hpp"
+#include <cstdint>
 
 namespace neat
 {
 
-using innovation_t = int;
+using innovation_t = int16_t;
 using index_t = int;
 #ifdef NEAT_DOUBLE_PRECISION
 using real_t = double;

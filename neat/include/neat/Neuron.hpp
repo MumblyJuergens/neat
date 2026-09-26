@@ -1,12 +1,13 @@
 #pragma once
 
 #include "neat/types.hpp"
+#include <cstdint>
 #include <utility>
 
 namespace neat
 {
 
-enum class NeuronType
+enum class NeuronType : uint8_t
 {
     input,
     output,
@@ -15,10 +16,10 @@ enum class NeuronType
 
 class [[nodiscard]] Neuron final
 {
-    innovation_t m_number;
-    NeuronType m_type;
     real_t m_value{};
-    int m_layer{};
+    innovation_t m_number;
+    uint8_t m_layer{};
+    NeuronType m_type;
 
   public:
     [[nodiscard]] constexpr auto number() const noexcept { return m_number; }
@@ -28,7 +29,7 @@ class [[nodiscard]] Neuron final
 
     constexpr void set_number(const innovation_t value) noexcept { m_number = value; }
     constexpr void set_value(const real_t value) noexcept { m_value = value; }
-    constexpr void set_layer(const int value) noexcept { m_layer = value; }
+    constexpr void set_layer(const uint8_t value) noexcept { m_layer = value; }
 
     /// @brief Don't use. For serialization only.
     Neuron() = default;
@@ -40,7 +41,7 @@ class [[nodiscard]] Neuron final
     }
 
     [[nodiscard]] constexpr Neuron(const innovation_t number, const NeuronType type) noexcept
-        : m_number{number}, m_type{type}, m_layer{type == NeuronType::input ? 0 : 1}
+        : m_number{number}, m_layer{static_cast<uint8_t>(type == NeuronType::input ? 0 : 1)}, m_type{type}
     {
     }
     [[nodiscard]] constexpr Neuron(const Neuron &that) noexcept { *this = that; }
@@ -66,5 +67,7 @@ class [[nodiscard]] Neuron final
     [[nodiscard]] static constexpr auto is_output(const Neuron &n) noexcept { return n.m_type == NeuronType::output; }
     [[nodiscard]] static constexpr auto is_hidden(const Neuron &n) noexcept { return n.m_type == NeuronType::hidden; }
 };
+
+static_assert(sizeof(Neuron) == sizeof(real_t) + 4);
 
 } // namespace neat

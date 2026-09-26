@@ -1,6 +1,7 @@
 #pragma once
 
 #include "neat/types.hpp"
+#include <cstdint>
 
 /// @file Config.hpp
 /// @brief Configuration for a simulation.
@@ -15,10 +16,10 @@ class Config
   public:
     // Setup
     int setup_population_size = 100;
-    int setup_input_nodes = 3;
-    int setup_output_nodes = 1;
+    int16_t setup_input_nodes = 3;
+    int16_t setup_output_nodes = 1;
     bool setup_connect_bias = false;
-    index_t setup_bias_input = 0;
+    int16_t setup_bias_input = 0;
     real_t setup_inital_connection_rate = 0.8_r;
 
     // Speciation.

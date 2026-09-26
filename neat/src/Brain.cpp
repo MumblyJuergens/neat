@@ -4,7 +4,9 @@
 #include "neat/Neuron.hpp"
 #include "neat/Random.hpp"
 #include "neat/Synapse.hpp"
+#include <SDL3/SDL_stdinc.h>
 #include <cassert>
+#include <cstdint>
 #include <mj/algorithm.hpp>
 #include <mj/iterator.hpp>
 #include <mj/math.hpp>
@@ -27,7 +29,7 @@ void Brain::init(const Config &cfg, const Init init, Random &random, InnovationH
              [&](const index_t i) { m_neurons.emplace_back(cfg.setup_input_nodes + i, NeuronType::output); });
     assert(mj::isize(m_neurons) == cfg.setup_input_nodes + cfg.setup_output_nodes);
     if (cfg.setup_connect_bias)
-        mj::loop(cfg.setup_output_nodes, [&](const index_t i) {
+        mj::loop(cfg.setup_output_nodes, [&](const int16_t i) {
             add_connection(cfg.setup_bias_input, cfg.setup_input_nodes + i, random, innovation_history);
         });
     for (auto const &in : m_neurons | std::views::filter(Neuron::is_input)) {
@@ -222,7 +224,7 @@ void Brain::add_node(Random &random, InnovationHistory &innovation_history) noex
     // rebuild_layers();
 }
 
-static void traceLongestPath(const Brain &brain, const Neuron &neuron, int &length)
+static void traceLongestPath(const Brain &brain, const Neuron &neuron, uint8_t &length)
 {
     for (const auto &synapse : brain.synapses() | mj::filter(&Synapse::out, std::equal_to{}, neuron.number()) |
                                    mj::filter(&Synapse::enabled, std::equal_to{}, true))
@@ -235,7 +237,7 @@ static void traceLongestPath(const Brain &brain, const Neuron &neuron, int &leng
 void Brain::rebuild_layers() noexcept
 {
     for (auto &neuron : m_neurons) {
-        int layer{};
+        uint8_t layer{};
         traceLongestPath(*this, neuron, layer);
         neuron.set_layer(layer);
     }
