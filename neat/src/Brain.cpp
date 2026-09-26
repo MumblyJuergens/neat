@@ -2,6 +2,7 @@
 #include "neat/Config.hpp"
 #include "neat/InnovationHistory.hpp"
 #include "neat/Neuron.hpp"
+#include "neat/Random.hpp"
 #include "neat/Synapse.hpp"
 #include <cassert>
 #include <mj/algorithm.hpp>
@@ -15,7 +16,7 @@
 namespace neat
 {
 
-void Brain::init(const Config &cfg, const Init init) noexcept
+void Brain::init(const Config &cfg, const Init init, Random &random) noexcept
 {
     m_neurons.clear();
     m_synapses.clear();
@@ -27,11 +28,11 @@ void Brain::init(const Config &cfg, const Init init) noexcept
     assert(mj::isize(m_neurons) == cfg.setup_input_nodes + cfg.setup_output_nodes);
     if (cfg.setup_connect_bias)
         mj::loop(cfg.setup_output_nodes,
-                 [&](const index_t i) { add_connection(cfg.setup_bias_input, cfg.setup_input_nodes + i); });
+                 [&](const index_t i) { add_connection(cfg.setup_bias_input, cfg.setup_input_nodes + i, random); });
     for (auto const &in : m_neurons | std::views::filter(Neuron::is_input)) {
         for (auto const &out : m_neurons | std::views::filter(Neuron::is_output)) {
-            if (Random::canonical() < cfg.setup_inital_connection_rate) {
-                add_connection(in.number(), out.number());
+            if (random.canonical() < cfg.setup_inital_connection_rate) {
+                add_connection(in.number(), out.number(), random);
             }
         }
     }
@@ -68,7 +69,7 @@ void Brain::init(const Config &cfg, const Init init) noexcept
     return ((cfg.species_disjoint_coefficient * disjoint) / divisor) + weightAverage;
 }
 
-[[nodiscard]] Brain Brain::crossover(const Brain &best, const Brain &worst, const Config &cfg)
+[[nodiscard]] Brain Brain::crossover(const Brain &best, const Brain &worst, const Config &cfg, Random &random)
 {
     // Taking disjoint and matching synapses from best, so best has the nodes what we want.
     Brain brain;
@@ -95,11 +96,11 @@ void Brain::init(const Config &cfg, const Init init) noexcept
         assert(synapse.in() == matchingSynapse->in());
         assert(synapse.out() == matchingSynapse->out());
         if (!synapse.enabled() || !matchingSynapse->enabled()) {
-            if (Random::canonical() < cfg.mutate_disable_node_rate) {
+            if (random.canonical() < cfg.mutate_disable_node_rate) {
                 enabled = false;
             }
         }
-        if (Random::canonical() < 0.5_r) {
+        if (random.canonical() < 0.5_r) {
             assert(synapse.in() < mj::isize(brain.m_neurons));
             assert(synapse.out() < mj::isize(brain.m_neurons));
             brain.m_synapses.push_back(synapse);
@@ -113,27 +114,27 @@ void Brain::init(const Config &cfg, const Init init) noexcept
     return brain;
 }
 
-void Brain::mutate(const Config &cfg) noexcept
+void Brain::mutate(const Config &cfg, Random &random) noexcept
 {
 
     // In case we want to mutate from jack for minimal structure.
     if (m_synapses.size() == 0) {
-        add_connection();
+        add_connection(random);
         return;
     }
 
     // Thanks to
     // https://github.com/CodeReclaimers/neat-python/blob/37bc8bb73fd6153a115001c2646f9f02bac3ad81/neat/genome.py#L264
     const auto div = std::max(1.0_r, cfg.mutate_new_node_rate + cfg.mutate_new_connection_rate);
-    const auto rand = Random::canonical();
+    const auto rand = random.canonical();
 
     if (rand < cfg.mutate_new_node_rate / div) {
-        add_node();
+        add_node(random);
     } else if (rand < (cfg.mutate_new_node_rate + cfg.mutate_new_connection_rate) / div) {
-        add_connection();
+        add_connection(random);
     }
 
-    std::ranges::for_each(m_synapses, [&cfg](Synapse &s) { s.mutate_weight(cfg); });
+    std::ranges::for_each(m_synapses, [&cfg, &random](Synapse &s) { s.mutate_weight(cfg, random); });
 }
 
 [[nodiscard]] bool Brain::is_fully_connected() const noexcept
@@ -151,17 +152,17 @@ void Brain::mutate(const Config &cfg) noexcept
     return maxConnections == mj::isize(m_synapses);
 }
 
-void Brain::add_connection(const innovation_t in, const innovation_t out)
+void Brain::add_connection(const innovation_t in, const innovation_t out, Random &random)
 {
     if (in == out) return;
     if (m_neurons.at(mj::sz_t(in)).layer() >= m_neurons.at(mj::sz_t(out)).layer()) return;
     if (std::ranges::any_of(m_synapses, [in, out](const Synapse &s) { return s.in() == in && s.out() == out; })) return;
     const auto innovation = InnovationHistory::get_innovation_number(in, out);
-    m_synapses.emplace_back(in, out, Random::weight(), innovation);
+    m_synapses.emplace_back(in, out, random.weight(), innovation);
     // rebuild_layers();
 }
 
-void Brain::add_connection() noexcept
+void Brain::add_connection(Random &random) noexcept
 {
     if (is_fully_connected()) return;
 
@@ -178,21 +179,21 @@ void Brain::add_connection() noexcept
             }
         }
     }
-    const auto &conn = Random::item(possibilities);
+    const auto &conn = random.item(possibilities);
     assert(conn.first < mj::isize(m_neurons));
     assert(conn.second < mj::isize(m_neurons));
-    add_connection(conn.first, conn.second);
+    add_connection(conn.first, conn.second, random);
 }
 
 // TODO: Recurrent connections, better layer checking?
-void Brain::add_node() noexcept
+void Brain::add_node(Random &random) noexcept
 {
     if (m_synapses.size() == 0) {
-        add_connection();
+        add_connection(random);
         return;
     }
 
-    Synapse &oldSynapse = Random::item(m_synapses);
+    Synapse &oldSynapse = random.item(m_synapses);
     oldSynapse.set_enabled(false);
     const auto oldIn = oldSynapse.in();
     const auto oldOut = oldSynapse.out();

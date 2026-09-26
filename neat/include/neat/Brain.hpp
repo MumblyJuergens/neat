@@ -2,6 +2,7 @@
 
 #include "neat/Config.hpp"
 #include "neat/Neuron.hpp"
+#include "neat/Random.hpp"
 #include "neat/Synapse.hpp"
 #include "neat/types.hpp"
 #include "neat_export.h"
@@ -42,14 +43,14 @@ class [[nodiscard]] NEAT_EXPORT Brain final
     constexpr Brain &operator=(const Brain &) noexcept = default;
     constexpr Brain &operator=(Brain &&) noexcept = default;
 
-    void init(const Config &cfg, const Init init) noexcept;
+    void init(const Config &cfg, const Init init, Random &random) noexcept;
     [[nodiscard]] real_t difference(const Brain &representative, const Config &cfg) const noexcept;
-    [[nodiscard]] static Brain crossover(const Brain &best, const Brain &worst, const Config &cfg);
-    void mutate(const Config &cfg) noexcept;
+    [[nodiscard]] static Brain crossover(const Brain &best, const Brain &worst, const Config &cfg, Random &random);
+    void mutate(const Config &cfg, Random &random) noexcept;
     [[nodiscard]] bool is_fully_connected() const noexcept;
-    void add_connection(const innovation_t in, const innovation_t out);
-    void add_connection() noexcept;
-    void add_node() noexcept;
+    void add_connection(const innovation_t in, const innovation_t out, Random &random);
+    void add_connection(Random &random) noexcept;
+    void add_node(Random &random) noexcept;
     void rebuild_layers() noexcept;
     [[nodiscard]] std::vector<real_t> run_network(const std::vector<real_t> &inputs, activator_f *activator) noexcept;
     std::string chart() const noexcept;

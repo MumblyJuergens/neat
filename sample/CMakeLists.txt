@@ -46,7 +46,10 @@ add_executable(neat_sample_snakesdl "snakesdl/main.cpp"
     snakesdl/raycast.hpp
     snakesdl/raycast.cpp
     snakesdl/directions.hpp
-    snakesdl/enums.hpp)
+    snakesdl/enums.hpp
+    snakesdl/random.cpp
+    snakesdl/random.hpp
+)
 target_compile_features(neat_sample_snakesdl PUBLIC cxx_std_26)
 target_compile_options(neat_sample_snakesdl PUBLIC -freflection)
 target_link_libraries(neat_sample_snakesdl PUBLIC neat::neat mjsdl::mjsdl)

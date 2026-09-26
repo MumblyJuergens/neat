@@ -1,11 +1,17 @@
 // Tests finding a network for solving xor, also used for benchmarks.
 
+#include <charconv>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <neat/Genome.hpp>
 #include <neat/SimplePopulation.hpp>
 #include <neat/neat.hpp>
 #include <neat/types.hpp>
 #include <print>
+#include <random>
 #include <ranges>
+#include <system_error>
 #include <vector>
 
 struct Entry
@@ -15,9 +21,17 @@ struct Entry
     bool out;
 };
 
-int main()
+int main(int argc, char *argv[])
 {
     using namespace neat::literals;
+
+    uint32_t seed = std::random_device{}();
+    if (argc >= 2) {
+        const auto result = std::from_chars(argv[1], argv[1] + std::strlen(argv[1]), seed);
+        if (result.ec == std::errc()) {
+            std::println("Running seeded: {}", seed);
+        }
+    }
 
     static constexpr std::array<Entry, 4> data{
         Entry{0.0_r, 0.0_r, false},
@@ -30,7 +44,7 @@ int main()
     cfg.setup_inital_connection_rate = 0.0_r;
     cfg.species_compatibility_threshold = 5.0_r;
 
-    neat::SimplePopulation population{cfg};
+    neat::SimplePopulation population{seed, cfg};
     std::vector<neat::real_t> fitnesses;
 
     std::vector<neat::real_t> in(3uz, 0.0_r), out;

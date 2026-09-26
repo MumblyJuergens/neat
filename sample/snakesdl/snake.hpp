@@ -3,11 +3,13 @@
 #include "config.hpp"
 #include "directions.hpp"
 #include "neat/Random.hpp"
+#include "random.hpp"
 #include "sdlmath.hpp"
 #include <SDL3/SDL_rect.h>
 #include <algorithm>
 #include <cstdint>
 #include <mjsdl/Renderer.hpp>
+#include <random>
 #include <vector>
 
 namespace snakesdl
@@ -31,9 +33,9 @@ struct Snake
     Snake()
     {
         color = SDL_Color{
-            static_cast<uint8_t>(neat::Random::range(255)),
-            static_cast<uint8_t>(neat::Random::range(255)),
-            static_cast<uint8_t>(neat::Random::range(255)),
+            static_cast<uint8_t>(snake_random.range(255)),
+            static_cast<uint8_t>(snake_random.range(255)),
+            static_cast<uint8_t>(snake_random.range(255)),
             SDL_ALPHA_OPAQUE,
         };
         reset();

@@ -3,11 +3,13 @@
 #include "neat/Config.hpp"
 #include "neat/Genome.hpp"
 #include "neat/InnovationHistory.hpp"
+#include "neat/Random.hpp"
 #include "neat/Species.hpp"
 #include <algorithm>
 #include <cereal/types/memory.hpp>
 #include <cereal/types/vector.hpp>
 #include <concepts>
+#include <cstdint>
 #include <functional>
 #include <mj/algorithm.hpp>
 #include <mj/math.hpp>
@@ -34,6 +36,7 @@ class [[nodiscard]] SimplePopulation final
     int m_champ_id{};
     bool m_finished{};
     real_t m_generation_max_fitness{};
+    Random random;
 
   public:
     // Methods for giving information about progress.
@@ -72,13 +75,13 @@ class [[nodiscard]] SimplePopulation final
     void build_population(std::vector<Genome> &pop, const Init init)
     {
         for (int i{}; i < m_population_size; ++i) {
-            pop.emplace_back().brain().init(cfg, init); // TODO: no init?
+            pop.emplace_back().brain().init(cfg, init, random); // TODO: no init?
         }
     }
 
     const Genome &brain_roulette(const Species &specie)
     {
-        const auto rand = Random::range(specie.total_fitness());
+        const auto rand = random.range(specie.total_fitness());
         real_t runningSum{};
         [[maybe_unused]] int sanity{};
         for (const auto &genome : m_genomes | mj::filter(&Genome::species, std::equal_to{}, specie.id())) {
@@ -94,16 +97,16 @@ class [[nodiscard]] SimplePopulation final
     }
 
   public:
-    [[nodiscard]] SimplePopulation(const Config &p_cfg = {}) noexcept
-        : cfg{p_cfg}, m_population_size{p_cfg.setup_population_size}
+    [[nodiscard]] SimplePopulation(uint32_t seed, const Config &p_cfg = {}) noexcept
+        : cfg{p_cfg}, m_population_size{p_cfg.setup_population_size}, random{seed}
     {
         build_population(m_genomes, Init::yes);
-        m_champ.init(p_cfg, Init::yes);
+        m_champ.init(p_cfg, Init::yes, random);
     }
 
     void reset_champ()
     {
-        m_champ.init(cfg, Init::yes);
+        m_champ.init(cfg, Init::yes, random);
         m_champ_id = 0;
         m_max_fitness = 0;
     }
@@ -212,8 +215,7 @@ class [[nodiscard]] SimplePopulation final
             int eliteCopied{};
             if (specie.size() > cfg.crossover_elite_size) {
                 eliteCopied = 1;
-                children.emplace_back().brain() =
-                    std::ranges::find(m_genomes, specie.id(), &Genome::species)->brain();
+                children.emplace_back().brain() = std::ranges::find(m_genomes, specie.id(), &Genome::species)->brain();
             }
             const real_t averageSpeciesFitness =
                 cfg.crossover_use_adjusted_fitness ? specie.adjusted_fitness() : specie.average_fitness();
@@ -224,14 +226,14 @@ class [[nodiscard]] SimplePopulation final
                 auto &parent0 = brain_roulette(specie);
                 auto &parent1 = brain_roulette(specie);
                 auto [worst, best] = std::ranges::minmax(parent0, parent1, std::less{}, &Genome::fitness);
-                auto child = Brain::crossover(best.brain(), worst.brain(), cfg);
-                child.mutate(cfg);
+                auto child = Brain::crossover(best.brain(), worst.brain(), cfg, random);
+                child.mutate(cfg, random);
                 children.emplace_back().brain() = child;
             });
         }
 
         for (auto i{mj::isize(children)}; i < m_population_size; ++i) {
-            children.emplace_back().brain().init(cfg, Init::yes);
+            children.emplace_back().brain().init(cfg, Init::yes, random);
             children[mj::sz_t(i)].set_index(i);
         }
 

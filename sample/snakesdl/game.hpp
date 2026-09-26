@@ -23,6 +23,7 @@
 #include <mjsdl/Renderer.hpp>
 #include <mjsdl/Window.hpp>
 #include <print>
+#include <random>
 #include <vector>
 
 namespace snakesdl
@@ -70,7 +71,7 @@ struct Game
             .mutate_new_connection_rate = 2.0f,
             .mutate_new_node_rate = 0.5f,
         };
-        population = std::make_unique<neat::SimplePopulation>(cfg);
+        population = std::make_unique<neat::SimplePopulation>(std::random_device{}(), cfg);
         // population->set_stats_string_handler([](const std::string &s) { std::println("{}", s); });
     }
 

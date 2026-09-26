@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.hpp"
-#include "neat/Random.hpp"
+#include "random.hpp"
 #include <SDL3/SDL_rect.h>
 #include <cmath>
 #include <cstddef>
@@ -24,8 +24,8 @@ class Food
             items.resize(index + GROW_SIZE);
             for (size_t i = old_size; i < items.size(); ++i) {
                 items[i] = SDL_FPoint{
-                    std::floor(neat::Random::range(config::COLLIDE_TL + 1, config::COLLIDE_BR)),
-                    std::floor(neat::Random::range(config::COLLIDE_TL + 1, config::COLLIDE_BR)),
+                    std::floor(snake_random.range(config::COLLIDE_TL + 1, config::COLLIDE_BR)),
+                    std::floor(snake_random.range(config::COLLIDE_TL + 1, config::COLLIDE_BR)),
                 };
             }
         }

@@ -48,15 +48,15 @@ class [[nodiscard]] Synapse final
         ar(m_in, m_out, m_weight, m_enabled, m_innovation);
     }
 
-    void mutate_weight(const Config &cfg)
+    void mutate_weight(const Config &cfg, Random &random)
     {
-        const auto random = Random::canonical();
-        if (random < cfg.mutate_redraw_weight) {
-            m_weight = Random::weight();
+        const auto rand_value = random.canonical();
+        if (rand_value < cfg.mutate_redraw_weight) {
+            m_weight = random.weight();
             return;
         }
-        if (Random::canonical() < cfg.mutate_weight_rate) {
-            m_weight += Random::range(-cfg.mutate_weight_amount, cfg.mutate_weight_amount);
+        if (random.canonical() < cfg.mutate_weight_rate) {
+            m_weight += random.range(-cfg.mutate_weight_amount, cfg.mutate_weight_amount);
             m_weight = std::clamp(m_weight, cfg.mutate_weight_min, cfg.mutate_weight_max);
         }
     }
