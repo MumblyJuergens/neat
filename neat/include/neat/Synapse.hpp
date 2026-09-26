@@ -10,17 +10,17 @@ namespace neat
 
 class [[nodiscard]] Synapse final
 {
+    real_t m_weight;
     innovation_t m_in;
     innovation_t m_out;
-    real_t m_weight;
-    bool m_enabled{true};
     innovation_t m_innovation;
+    bool m_enabled{true};
     // bool m_is_recursive{}; // TODO: Recursion.
 
   public:
     [[nodiscard]] constexpr Synapse(const innovation_t in, const innovation_t out, const real_t weight,
                                     const innovation_t innovation) noexcept
-        : m_in{in}, m_out{out}, m_weight{weight}, m_innovation{innovation}
+        : m_weight{weight}, m_in{in}, m_out{out}, m_innovation{innovation}
     {
     }
     [[nodiscard]] Synapse(const Synapse &) noexcept = default;
@@ -61,5 +61,7 @@ class [[nodiscard]] Synapse final
         }
     }
 };
+
+static_assert(sizeof(Synapse) == sizeof(real_t) + 7 + 1); // + 1 padding :(
 
 } // namespace neat

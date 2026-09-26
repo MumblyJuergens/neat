@@ -33,11 +33,13 @@ class [[nodiscard]] SimplePopulation final
     int m_generation{};
     std::function<void(std::string)> m_stats_string_handler;
     Brain m_champ;
-    int m_champ_id{};
     bool m_finished{};
     real_t m_generation_max_fitness{};
     Random random;
     InnovationHistory innovation_history;
+    int m_champ_id{};
+    int m_running_genome_id{};
+    int m_running_species_id{};
 
   public:
     // Methods for giving information about progress.
@@ -76,7 +78,9 @@ class [[nodiscard]] SimplePopulation final
     void build_population(std::vector<Genome> &pop, const Init init)
     {
         for (int i{}; i < m_population_size; ++i) {
-            pop.emplace_back().brain().init(cfg, init, random, innovation_history); // TODO: no init?
+            pop.emplace_back(m_running_genome_id++)
+                .brain()
+                .init(cfg, init, random, innovation_history); // TODO: no init?
         }
     }
 
@@ -117,8 +121,6 @@ class [[nodiscard]] SimplePopulation final
     {
         ar(m_genomes, m_species, cfg, m_generation_is_done, m_population_size, m_generation, m_finished,
            m_generation_max_fitness, innovation_history);
-        Genome::serialize_static(ar);
-        Species::serialize_static(ar);
         // TODO: Serialize random seed/state?
     }
 
@@ -135,7 +137,7 @@ class [[nodiscard]] SimplePopulation final
             ++doneDone;
             if (genome.fitness() > m_generation_max_fitness) {
                 m_generation_max_fitness = genome.fitness();
-                genome.make_current_champ();
+                m_champ_id = genome.id();
                 if (m_stats_string_handler) {
                     m_stats_string_handler(std::format("Generation max: {}\r", m_generation_max_fitness));
                 }
@@ -180,7 +182,7 @@ class [[nodiscard]] SimplePopulation final
                 }
             }
             // All alone in this world :(
-            if (!found) genome.set_species(m_species.emplace_back(genome.brain()).id());
+            if (!found) genome.set_species(m_species.emplace_back(genome.brain(), m_running_species_id++).id());
         }
         // Stupid erase_if can't use views to drop the first one grrr.
         m_species.erase(
@@ -216,7 +218,8 @@ class [[nodiscard]] SimplePopulation final
             int eliteCopied{};
             if (specie.size() > cfg.crossover_elite_size) {
                 eliteCopied = 1;
-                children.emplace_back().brain() = std::ranges::find(m_genomes, specie.id(), &Genome::species)->brain();
+                children.emplace_back(m_running_genome_id++).brain() =
+                    std::ranges::find(m_genomes, specie.id(), &Genome::species)->brain();
             }
             const real_t averageSpeciesFitness =
                 cfg.crossover_use_adjusted_fitness ? specie.adjusted_fitness() : specie.average_fitness();
@@ -229,12 +232,12 @@ class [[nodiscard]] SimplePopulation final
                 auto [worst, best] = std::ranges::minmax(parent0, parent1, std::less{}, &Genome::fitness);
                 auto child = Brain::crossover(best.brain(), worst.brain(), cfg, random);
                 child.mutate(cfg, random, innovation_history);
-                children.emplace_back().brain() = child;
+                children.emplace_back(m_running_genome_id++).brain() = child;
             });
         }
 
         for (auto i{mj::isize(children)}; i < m_population_size; ++i) {
-            children.emplace_back().brain().init(cfg, Init::yes, random, innovation_history);
+            children.emplace_back(m_running_genome_id++).brain().init(cfg, Init::yes, random, innovation_history);
             children[mj::sz_t(i)].set_index(i);
         }
 

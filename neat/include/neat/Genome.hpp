@@ -18,25 +18,16 @@ class [[nodiscard]] NEAT_EXPORT Genome final
     bool m_sim_is_done{};
     bool m_sim_is_perfect{};
     int m_species{};
-    static inline int s_id{};
-    static inline int s_champ_id{};
-    int m_id{++s_id};
+    int m_id;
     int m_index{};
 
   public:
-  
-    [[nodiscard]] Genome() noexcept = default;
+    [[nodiscard]] Genome(int _id) noexcept : m_id{_id} {}
 
     template <typename Archive>
     void serialize(Archive &ar)
     {
         ar(m_brain, m_fitness, m_adjusted_fitness, m_sim_is_done, m_sim_is_perfect, m_species, m_id, m_index);
-    }
-
-    template <typename Archive>
-    static void serialize_static(Archive &ar)
-    {
-        ar(s_id, s_champ_id);
     }
 
     constexpr Genome(const Genome &) = delete;
@@ -54,14 +45,13 @@ class [[nodiscard]] NEAT_EXPORT Genome final
     [[nodiscard]] constexpr auto simulation_is_done() const noexcept { return m_sim_is_done; }
     [[nodiscard]] constexpr auto simulation_is_perfect() const noexcept { return m_sim_is_perfect; }
     [[nodiscard]] constexpr auto species() const noexcept { return m_species; }
-    [[nodiscard]] auto is_current_champ() const noexcept { return m_id == s_champ_id; }
+    [[nodiscard]] auto id() const noexcept { return m_id; }
     [[nodiscard]] auto index() const noexcept { return m_index; }
 
     constexpr void set_fitness(const real_t value) noexcept { m_fitness = value; }
     constexpr void set_adjusted_fitness(const real_t value) noexcept { m_adjusted_fitness = value; }
     constexpr void set_simulation_is_done(const bool value) noexcept { m_sim_is_done = value; }
     constexpr void set_species(const int value) noexcept { m_species = value; }
-    constexpr void make_current_champ() noexcept { s_champ_id = m_id; }
     constexpr void set_index(const int value) noexcept { m_index = value; }
 
     void simple_step(const std::vector<real_t> &inputs, std::vector<real_t> &outputs, activator_f *activator);

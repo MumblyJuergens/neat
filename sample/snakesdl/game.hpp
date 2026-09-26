@@ -135,7 +135,7 @@ struct Game
                 }
                 snake.fitness += 0.001f;
                 genome.set_fitness(snake.fitness);
-                snake.is_champ = genome.is_current_champ();
+                snake.is_champ = genome.id() == population->champ_id();
 
                 genome.simple_step(inputs, outputs, std::tanh);
 

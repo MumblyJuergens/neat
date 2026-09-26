@@ -8,8 +8,7 @@ namespace neat
 
 class [[nodiscard]] Species final
 {
-    static inline int s_id{};
-    int m_id{++s_id};
+    int m_id;
     Brain m_representative;
     int m_staleness{};
     int m_age{};
@@ -45,7 +44,9 @@ class [[nodiscard]] Species final
     constexpr void increase_total_fitness(const real_t value) noexcept { m_total_fitness += value; }
     constexpr void increase_total_adjusted_fitness(const real_t value) noexcept { m_total_adjusted_fitness += value; }
 
-    [[nodiscard]] Species(const Brain &representative) noexcept : m_representative{representative} {}
+    [[nodiscard]] Species(const Brain &representative, int _id) noexcept : m_id{_id}, m_representative{representative}
+    {
+    }
 
     /// @brief Don't use. Serialization use only. Please don't make species without a representative.
     Species() = default;
@@ -55,12 +56,6 @@ class [[nodiscard]] Species final
     {
         ar(m_id, m_representative, m_staleness, m_age, m_total_fitness, m_total_adjusted_fitness, m_max_fitness,
            m_max_fitness_record, m_size);
-    }
-
-    template <typename Archive>
-    static void serialize_static(Archive &ar)
-    {
-        ar(s_id);
     }
 
     constexpr void new_generation() noexcept
