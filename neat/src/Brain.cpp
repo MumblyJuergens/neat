@@ -16,7 +16,7 @@
 namespace neat
 {
 
-void Brain::init(const Config &cfg, const Init init, Random &random) noexcept
+void Brain::init(const Config &cfg, const Init init, Random &random, InnovationHistory &innovation_history) noexcept
 {
     m_neurons.clear();
     m_synapses.clear();
@@ -27,12 +27,13 @@ void Brain::init(const Config &cfg, const Init init, Random &random) noexcept
              [&](const index_t i) { m_neurons.emplace_back(cfg.setup_input_nodes + i, NeuronType::output); });
     assert(mj::isize(m_neurons) == cfg.setup_input_nodes + cfg.setup_output_nodes);
     if (cfg.setup_connect_bias)
-        mj::loop(cfg.setup_output_nodes,
-                 [&](const index_t i) { add_connection(cfg.setup_bias_input, cfg.setup_input_nodes + i, random); });
+        mj::loop(cfg.setup_output_nodes, [&](const index_t i) {
+            add_connection(cfg.setup_bias_input, cfg.setup_input_nodes + i, random, innovation_history);
+        });
     for (auto const &in : m_neurons | std::views::filter(Neuron::is_input)) {
         for (auto const &out : m_neurons | std::views::filter(Neuron::is_output)) {
             if (random.canonical() < cfg.setup_inital_connection_rate) {
-                add_connection(in.number(), out.number(), random);
+                add_connection(in.number(), out.number(), random, innovation_history);
             }
         }
     }
@@ -114,12 +115,12 @@ void Brain::init(const Config &cfg, const Init init, Random &random) noexcept
     return brain;
 }
 
-void Brain::mutate(const Config &cfg, Random &random) noexcept
+void Brain::mutate(const Config &cfg, Random &random, InnovationHistory &innovation_history) noexcept
 {
 
     // In case we want to mutate from jack for minimal structure.
     if (m_synapses.size() == 0) {
-        add_connection(random);
+        add_connection(random, innovation_history);
         return;
     }
 
@@ -129,9 +130,9 @@ void Brain::mutate(const Config &cfg, Random &random) noexcept
     const auto rand = random.canonical();
 
     if (rand < cfg.mutate_new_node_rate / div) {
-        add_node(random);
+        add_node(random, innovation_history);
     } else if (rand < (cfg.mutate_new_node_rate + cfg.mutate_new_connection_rate) / div) {
-        add_connection(random);
+        add_connection(random, innovation_history);
     }
 
     std::ranges::for_each(m_synapses, [&cfg, &random](Synapse &s) { s.mutate_weight(cfg, random); });
@@ -152,17 +153,18 @@ void Brain::mutate(const Config &cfg, Random &random) noexcept
     return maxConnections == mj::isize(m_synapses);
 }
 
-void Brain::add_connection(const innovation_t in, const innovation_t out, Random &random)
+void Brain::add_connection(const innovation_t in, const innovation_t out, Random &random,
+                           InnovationHistory &innovation_history)
 {
     if (in == out) return;
     if (m_neurons.at(mj::sz_t(in)).layer() >= m_neurons.at(mj::sz_t(out)).layer()) return;
     if (std::ranges::any_of(m_synapses, [in, out](const Synapse &s) { return s.in() == in && s.out() == out; })) return;
-    const auto innovation = InnovationHistory::get_innovation_number(in, out);
+    const auto innovation = innovation_history.get_innovation_number(in, out);
     m_synapses.emplace_back(in, out, random.weight(), innovation);
     // rebuild_layers();
 }
 
-void Brain::add_connection(Random &random) noexcept
+void Brain::add_connection(Random &random, InnovationHistory &innovation_history) noexcept
 {
     if (is_fully_connected()) return;
 
@@ -182,14 +184,14 @@ void Brain::add_connection(Random &random) noexcept
     const auto &conn = random.item(possibilities);
     assert(conn.first < mj::isize(m_neurons));
     assert(conn.second < mj::isize(m_neurons));
-    add_connection(conn.first, conn.second, random);
+    add_connection(conn.first, conn.second, random, innovation_history);
 }
 
 // TODO: Recurrent connections, better layer checking?
-void Brain::add_node(Random &random) noexcept
+void Brain::add_node(Random &random, InnovationHistory &innovation_history) noexcept
 {
     if (m_synapses.size() == 0) {
-        add_connection(random);
+        add_connection(random, innovation_history);
         return;
     }
 
@@ -204,8 +206,8 @@ void Brain::add_node(Random &random) noexcept
     auto &neuron = m_neurons.emplace_back(newId, NeuronType::hidden);
     assert(oldIn < mj::isize(m_neurons));
     assert(oldOut < mj::isize(m_neurons));
-    const auto innovation0 = InnovationHistory::get_innovation_number(oldIn, neuron.number());
-    const auto innovation1 = InnovationHistory::get_innovation_number(neuron.number(), oldOut);
+    const auto innovation0 = innovation_history.get_innovation_number(oldIn, neuron.number());
+    const auto innovation1 = innovation_history.get_innovation_number(neuron.number(), oldOut);
     m_synapses.emplace_back(oldIn, neuron.number(), 1.0_r, innovation0);
     m_synapses.emplace_back(neuron.number(), oldOut, oldWeight, innovation1);
 

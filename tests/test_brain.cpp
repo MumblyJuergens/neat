@@ -1,4 +1,5 @@
 #include "neat/Brain.hpp"
+#include "neat/InnovationHistory.hpp"
 #include "neat/Random.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cereal/archives/binary.hpp>
@@ -13,7 +14,8 @@ TEST_CASE("Brain can serialize", "[serialize]")
     // Init with layer count of two, empty synapses and neurons, no randomness.
     neat::Brain source{};
     neat::Random random{std::random_device{}()};
-    source.init(neat::Config{}, neat::Init::no, random);
+    neat::InnovationHistory innovation_history;
+    source.init(neat::Config{}, neat::Init::no, random, innovation_history);
     neat::Brain target{};
     std::stringstream storage;
 

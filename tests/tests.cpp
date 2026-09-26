@@ -1,3 +1,4 @@
+#include "neat/InnovationHistory.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <neat/Brain.hpp>
@@ -53,14 +54,15 @@ TEST_CASE("rebuild brain layers", "[brain, layers]")
     using namespace neat::literals;
 
     neat::Random random{std::random_device{}()};
+    neat::InnovationHistory innovation_history;
     neat::Brain brain;
     brain.init({.setup_input_nodes = 3,
                 .setup_output_nodes = 1,
                 .setup_connect_bias = false,
                 .setup_inital_connection_rate = 0.0_r},
-               neat::Init::yes, random);
-    brain.add_connection(0, 3, random); // Bias to output.
-    brain.add_node(random);             // Uses only connection available.
+               neat::Init::yes, random, innovation_history);
+    brain.add_connection(0, 3, random, innovation_history); // Bias to output.
+    brain.add_node(random, innovation_history);             // Uses only connection available.
 
     brain.rebuild_layers();
 

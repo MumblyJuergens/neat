@@ -37,6 +37,7 @@ class [[nodiscard]] SimplePopulation final
     bool m_finished{};
     real_t m_generation_max_fitness{};
     Random random;
+    InnovationHistory innovation_history;
 
   public:
     // Methods for giving information about progress.
@@ -75,7 +76,7 @@ class [[nodiscard]] SimplePopulation final
     void build_population(std::vector<Genome> &pop, const Init init)
     {
         for (int i{}; i < m_population_size; ++i) {
-            pop.emplace_back().brain().init(cfg, init, random); // TODO: no init?
+            pop.emplace_back().brain().init(cfg, init, random, innovation_history); // TODO: no init?
         }
     }
 
@@ -101,12 +102,12 @@ class [[nodiscard]] SimplePopulation final
         : cfg{p_cfg}, m_population_size{p_cfg.setup_population_size}, random{seed}
     {
         build_population(m_genomes, Init::yes);
-        m_champ.init(p_cfg, Init::yes, random);
+        m_champ.init(p_cfg, Init::yes, random, innovation_history);
     }
 
     void reset_champ()
     {
-        m_champ.init(cfg, Init::yes, random);
+        m_champ.init(cfg, Init::yes, random, innovation_history);
         m_champ_id = 0;
         m_max_fitness = 0;
     }
@@ -115,10 +116,10 @@ class [[nodiscard]] SimplePopulation final
     void serialize(Archive &ar)
     {
         ar(m_genomes, m_species, cfg, m_generation_is_done, m_population_size, m_generation, m_finished,
-           m_generation_max_fitness);
+           m_generation_max_fitness, innovation_history);
         Genome::serialize_static(ar);
         Species::serialize_static(ar);
-        InnovationHistory::serialize_static(ar);
+        // TODO: Serialize random seed/state?
     }
 
     template <typename Handler>
@@ -227,13 +228,13 @@ class [[nodiscard]] SimplePopulation final
                 auto &parent1 = brain_roulette(specie);
                 auto [worst, best] = std::ranges::minmax(parent0, parent1, std::less{}, &Genome::fitness);
                 auto child = Brain::crossover(best.brain(), worst.brain(), cfg, random);
-                child.mutate(cfg, random);
+                child.mutate(cfg, random, innovation_history);
                 children.emplace_back().brain() = child;
             });
         }
 
         for (auto i{mj::isize(children)}; i < m_population_size; ++i) {
-            children.emplace_back().brain().init(cfg, Init::yes, random);
+            children.emplace_back().brain().init(cfg, Init::yes, random, innovation_history);
             children[mj::sz_t(i)].set_index(i);
         }
 

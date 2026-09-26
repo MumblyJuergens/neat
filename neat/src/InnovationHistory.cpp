@@ -2,10 +2,6 @@
 
 namespace neat
 {
-innovation_t InnovationHistory::s_global_innovation_number = 0;
-std::unordered_map<iipair, innovation_t, InnovationHistory::iipair_hash> InnovationHistory::data;
-
-innovation_t InnovationHistory::next_global_innovation_number() noexcept { return s_global_innovation_number++; }
 
 [[nodiscard]] innovation_t InnovationHistory::get_innovation_number(const innovation_t in,
                                                                     const innovation_t out) noexcept
