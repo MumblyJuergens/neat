@@ -238,7 +238,6 @@ class [[nodiscard]] SimplePopulation final
 
         for (auto i{mj::isize(children)}; i < m_population_size; ++i) {
             children.emplace_back(m_running_genome_id++).brain().init(cfg, Init::yes, random, innovation_history);
-            children[mj::sz_t(i)].set_index(i);
         }
 
         if (mj::isize(m_species) > cfg.species_count_target) {
