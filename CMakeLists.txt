@@ -9,6 +9,7 @@ project(neat
 option(NEAT_BUILD_TESTS "Build tests for neat")
 option(NEAT_BUILD_SAMPLE "Build sample for neat")
 option(NEAT_BUILD_GDEXTENSION "Build Godot GDExtension")
+option(NEAT_BUILD_FOR_NATIVE "Build with -march=native" OFF)
 
 include(cmake/CPM.cmake)
 include(cmake/helpers.cmake)

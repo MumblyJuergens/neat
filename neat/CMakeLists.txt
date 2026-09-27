@@ -34,6 +34,9 @@ target_sources(neat
 )
 add_library(neat::neat ALIAS neat)
 target_compile_features(neat PUBLIC cxx_std_26)
+if(NEAT_BUILD_FOR_NATIVE)
+    target_compile_options(neat PUBLIC -march=native)
+endif()
 target_link_libraries(neat PUBLIC mj::mj cereal::cereal)
 FullCompilerWarnings(neat PUBLIC)
 

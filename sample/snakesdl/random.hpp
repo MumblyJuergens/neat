@@ -1,5 +1,6 @@
 #pragma once
 
 #include "neat/Random.hpp"
+#include <optional>
 
-extern neat::Random snake_random;
+extern std::optional<neat::Random> snake_random;

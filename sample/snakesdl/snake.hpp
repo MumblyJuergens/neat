@@ -33,9 +33,9 @@ struct Snake
     Snake()
     {
         color = SDL_Color{
-            static_cast<uint8_t>(snake_random.range(255)),
-            static_cast<uint8_t>(snake_random.range(255)),
-            static_cast<uint8_t>(snake_random.range(255)),
+            static_cast<uint8_t>(snake_random->range(255)),
+            static_cast<uint8_t>(snake_random->range(255)),
+            static_cast<uint8_t>(snake_random->range(255)),
             SDL_ALPHA_OPAQUE,
         };
         reset();

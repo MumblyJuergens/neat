@@ -6,6 +6,7 @@
 #include "neat/Config.hpp"
 #include "neat/Genome.hpp"
 #include "neat/SimplePopulation.hpp"
+#include "random.hpp"
 #include "raycast.hpp"
 #include "sdlmath.hpp"
 #include "snake.hpp"
@@ -17,8 +18,10 @@
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <mjsdl/Renderer.hpp>
 #include <mjsdl/Window.hpp>
@@ -49,11 +52,20 @@ struct Game
     bool render{true};
     bool vsync{true};
     RenderSnakeStyle render_style{RenderSnakeStyle::ALL};
+    int generations_limit{};
+
+    std::chrono::high_resolution_clock::time_point began;
 
     static constexpr int POPULATION_SIZE = 300;
 
-    void init()
+    void init(uint32_t seed, uint32_t _generations_limit, bool headless)
     {
+        began = std::chrono::high_resolution_clock::now();
+
+        generations_limit = static_cast<int>(_generations_limit);
+        snake_random.emplace(seed);
+        render = vsync = !headless;
+
         std::tie(window, renderer) = mjsdl::Renderer::create_window_and_renderer(
             "NEAT Snake SDL3 - snakesdl", config::WINDOW_SIZE, config::WINDOW_SIZE, SDL_WINDOW_RESIZABLE);
         SDL_SetRenderScale(renderer.get(), config::POINT_SIZE, config::POINT_SIZE);
@@ -71,11 +83,11 @@ struct Game
             .mutate_new_connection_rate = 2.0f,
             .mutate_new_node_rate = 0.5f,
         };
-        population = std::make_unique<neat::SimplePopulation>(std::random_device{}(), cfg);
+        population = std::make_unique<neat::SimplePopulation>(seed, cfg);
         // population->set_stats_string_handler([](const std::string &s) { std::println("{}", s); });
     }
 
-    void iterate(double delta)
+    SDL_AppResult iterate(double delta)
     {
         if (frame++ % 100 == 0) {
             fps = 1.0 / (delta / SDL_MS_PER_SECOND);
@@ -196,7 +208,12 @@ struct Game
             food.reset();
             population->new_generation();
             std::println("Generation: {}", population->generation());
+            if (generations_limit && population->generation() >= generations_limit) {
+                return SDL_APP_SUCCESS;
+            }
         }
+
+        return SDL_APP_CONTINUE;
     }
 
     void set_vsync(bool on) { SDL_SetRenderVSync(renderer.get(), on ? 1 : SDL_RENDERER_VSYNC_DISABLED); }

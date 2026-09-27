@@ -24,8 +24,8 @@ class Food
             items.resize(index + GROW_SIZE);
             for (size_t i = old_size; i < items.size(); ++i) {
                 items[i] = SDL_FPoint{
-                    std::floor(snake_random.range(config::COLLIDE_TL + 1, config::COLLIDE_BR)),
-                    std::floor(snake_random.range(config::COLLIDE_TL + 1, config::COLLIDE_BR)),
+                    std::floor(snake_random->range(config::COLLIDE_TL + 1, config::COLLIDE_BR)),
+                    std::floor(snake_random->range(config::COLLIDE_TL + 1, config::COLLIDE_BR)),
                 };
             }
         }
