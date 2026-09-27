@@ -12,9 +12,10 @@ static uint64_t prevms{}, currentms{};
 
 SDL_AppResult SDL_AppInit(void **appstate, [[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 {
-    uint32_t seed = std::random_device{}();
-    uint32_t generations_limit = 0;
+    int seed = static_cast<int>(std::random_device{}());
+    int generations_limit = 0;
     bool headless = false;
+    int population_size = 300;
     if (argc >= 2) {
         const auto result = std::from_chars(argv[1], argv[1] + std::strlen(argv[1]), seed);
         if (result.ec != std::errc()) {
@@ -31,14 +32,22 @@ SDL_AppResult SDL_AppInit(void **appstate, [[maybe_unused]] int argc, [[maybe_un
         }
         std::println("Running for {} generations", generations_limit);
     }
-    if (argc == 4 && std::strcmp(argv[3], "headless") == 0) {
+    if (argc >= 4 && std::strcmp(argv[3], "headless") == 0) {
         headless = true;
+    }
+    if (argc == 5) {
+        const auto result = std::from_chars(argv[4], argv[4] + std::strlen(argv[4]), population_size);
+        if (result.ec != std::errc()) {
+            std::println("Bad population size value, must be positive integer");
+            return SDL_APP_FAILURE;
+        }
+        std::println("Running with population of {}", population_size);
     }
 
     auto game = std::make_unique<snakesdl::Game>();
 
     prevms = SDL_GetTicks();
-    game->init(seed, generations_limit, headless);
+    game->init(seed, generations_limit, headless, population_size);
 
     *appstate = game.release();
     return SDL_APP_CONTINUE;

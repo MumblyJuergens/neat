@@ -56,15 +56,16 @@ struct Game
 
     std::chrono::high_resolution_clock::time_point began;
 
-    static constexpr int POPULATION_SIZE = 300;
+    size_t population_size = 300;
 
-    void init(uint32_t seed, uint32_t _generations_limit, bool headless)
+    void init(int seed, int _generations_limit, bool headless, int _population_size)
     {
         began = std::chrono::high_resolution_clock::now();
 
         generations_limit = static_cast<int>(_generations_limit);
         snake_random.emplace(seed);
         render = vsync = !headless;
+        population_size = static_cast<uint32_t>(_population_size);
 
         std::tie(window, renderer) = mjsdl::Renderer::create_window_and_renderer(
             "NEAT Snake SDL3 - snakesdl", config::WINDOW_SIZE, config::WINDOW_SIZE, SDL_WINDOW_RESIZABLE);
@@ -72,11 +73,11 @@ struct Game
         SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
         set_vsync(true);
 
-        snakes.resize(POPULATION_SIZE);
-        current_food.resize(POPULATION_SIZE, 0uz);
+        snakes.resize(population_size);
+        current_food.resize(population_size, 0uz);
 
         neat::Config cfg{
-            .setup_population_size = POPULATION_SIZE,
+            .setup_population_size = static_cast<int>(population_size),
             .setup_input_nodes = 17,
             .setup_output_nodes = 2,
             .setup_inital_connection_rate = 0.0f,
@@ -204,12 +205,13 @@ struct Game
         if (population->generation_is_done()) {
             std::ranges::for_each(snakes, &Snake::reset);
             current_food.clear();
-            current_food.resize(POPULATION_SIZE, 0uz);
+            current_food.resize(population_size, 0uz);
             food.reset();
             population->new_generation();
-            std::println("Generation: {}", population->generation());
             if (generations_limit && population->generation() >= generations_limit) {
                 return SDL_APP_SUCCESS;
+            } else {
+                std::println("Generation: {}", population->generation());
             }
         }
 
