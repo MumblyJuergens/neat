@@ -1,3 +1,4 @@
+#include "CLI/CLI.hpp"
 #include "game.hpp"
 #include <SDL3/SDL_init.h>
 #include <chrono>
@@ -5,43 +6,31 @@
 #include <cstring>
 #include <print>
 #define SDL_MAIN_USE_CALLBACKS 1
+#include <CLI/CLI.hpp>
 #include <SDL3/SDL_main.h>
 #include <memory>
 
 static uint64_t prevms{}, currentms{};
 
-SDL_AppResult SDL_AppInit(void **appstate, [[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
+SDL_AppResult SDL_AppInit(void **appstate, [[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
     int seed = static_cast<int>(std::random_device{}());
     int generations_limit = 0;
     bool headless = false;
     int population_size = 300;
-    if (argc >= 2) {
-        const auto result = std::from_chars(argv[1], argv[1] + std::strlen(argv[1]), seed);
-        if (result.ec != std::errc()) {
-            std::println("Bad seed value, must be positive integer");
-            return SDL_APP_FAILURE;
-        }
-        std::println("Running with seed value {}", seed);
+
+    CLI::App app{"snakesdl"};
+    argv = app.ensure_utf8(argv);
+    app.add_option("-s,--seed", seed, "Seed value for RNG");
+    app.add_option("-g,--generations", generations_limit, "Limit the number of generation to run for");
+    app.add_flag("--headless", headless, "Run without rendering or vsync");
+    app.add_option("-p,--population", population_size, "The suggested population per generation");
+
+    try {
+        app.parse(argc, argv);
     }
-    if (argc >= 3) {
-        const auto result = std::from_chars(argv[2], argv[2] + std::strlen(argv[2]), generations_limit);
-        if (result.ec != std::errc()) {
-            std::println("Bad generations limit value, must be positive integer");
-            return SDL_APP_FAILURE;
-        }
-        std::println("Running for {} generations", generations_limit);
-    }
-    if (argc >= 4 && std::strcmp(argv[3], "headless") == 0) {
-        headless = true;
-    }
-    if (argc == 5) {
-        const auto result = std::from_chars(argv[4], argv[4] + std::strlen(argv[4]), population_size);
-        if (result.ec != std::errc()) {
-            std::println("Bad population size value, must be positive integer");
-            return SDL_APP_FAILURE;
-        }
-        std::println("Running with population of {}", population_size);
+    catch (const CLI::ParseError &e) {
+        return SDL_APP_FAILURE;
     }
 
     auto game = std::make_unique<snakesdl::Game>();

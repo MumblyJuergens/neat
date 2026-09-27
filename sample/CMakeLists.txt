@@ -3,6 +3,8 @@
 # target_compile_options(cppfront_cppfront PUBLIC /bigobj)
 # endif()
 
+CPMAddPackage("gh:CLIUtils/CLI11@2.7.2")
+
 add_executable(neat_sample_xor "xor/xor.cpp")
 target_compile_features(neat_sample_xor PRIVATE cxx_std_26)
 target_link_libraries(neat_sample_xor PRIVATE neat::neat)
@@ -55,7 +57,7 @@ add_executable(neat_sample_snakesdl "snakesdl/main.cpp"
 )
 target_compile_features(neat_sample_snakesdl PUBLIC cxx_std_26)
 target_compile_options(neat_sample_snakesdl PUBLIC -freflection)
-target_link_libraries(neat_sample_snakesdl PUBLIC neat::neat mjsdl::mjsdl)
+target_link_libraries(neat_sample_snakesdl PUBLIC neat::neat mjsdl::mjsdl CLI11::CLI11)
 FullCompilerWarnings(neat_sample_snakesdl PUBLIC)
 if(NEAT_BUILD_FOR_NATIVE)
     target_compile_options(neat_sample_snakesdl PUBLIC -march=native)
