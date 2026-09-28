@@ -4,7 +4,6 @@
 #include "neat/Neuron.hpp"
 #include "neat/Random.hpp"
 #include "neat/Synapse.hpp"
-#include <SDL3/SDL_stdinc.h>
 #include <cassert>
 #include <cstdint>
 #include <mj/algorithm.hpp>

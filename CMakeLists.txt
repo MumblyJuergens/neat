@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 4.3)
 
 project(neat
-    VERSION 0.0.2
+    VERSION 0.0.4
     DESCRIPTION "NEAT (NeuroEvolution of Augmenting Topologies) in C++"
     HOMEPAGE_URL "https://github.com/MumblyJuergens/neat"
     LANGUAGES CXX)
